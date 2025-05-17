@@ -34,12 +34,13 @@ export async function signInAction(
     };
   }
   try {
-    await signIn('email-password', {
+    const data = await signIn('email-password', {
       email: values.email,
       password: values.password,
       redirect: false,
       callbackUrl: '/documents',
     });
+    console.log('Sign in successful', data);
     return { success: true };
   } catch (error) {
     console.error('Sign in failed', error);

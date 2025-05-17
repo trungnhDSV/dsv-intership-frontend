@@ -1,76 +1,76 @@
-"use client";
-import { AppDocument, columns } from "@/app/documents/column";
-import { DataTable } from "@/app/documents/data-table";
-import { Button } from "@/components/ui/button";
-import { useSession } from "next-auth/react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
+'use client';
+import { AppDocument, columns } from '@/app/documents/column';
+import { DataTable } from '@/app/documents/data-table';
+import { Button } from '@/components/ui/button';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 
 const MOCK_DATA = [
   {
-    id: "doc-1",
-    fileName: "Letter of Acceptance of Payment Plan",
-    owner: "Elton Le (You)",
-    avatar: "/avatars/elton.png",
-    updatedAt: "2025-12-22T05:06:07Z",
+    id: 'doc-1',
+    fileName: 'Letter of Acceptance of Payment Plan',
+    owner: 'Elton Le (You)',
+    avatar: '/avatars/elton.png',
+    updatedAt: '2025-12-22T05:06:07Z',
   },
   {
-    id: "doc-2",
-    fileName: "Notice of Default on Settlement Offer",
-    owner: "Savannah Nguyen",
-    avatar: "/avatars/savannah.png",
-    updatedAt: "2024-11-14T12:06:07Z",
+    id: 'doc-2',
+    fileName: 'Notice of Default on Settlement Offer',
+    owner: 'Savannah Nguyen',
+    avatar: '/avatars/savannah.png',
+    updatedAt: '2024-11-14T12:06:07Z',
   },
   {
-    id: "doc-3",
-    fileName: "Motion to Compel Discovery",
-    owner: "Jacob Jones",
-    avatar: "/avatars/jacob.png",
-    updatedAt: "2024-10-22T08:06:07Z",
+    id: 'doc-3',
+    fileName: 'Motion to Compel Discovery',
+    owner: 'Jacob Jones',
+    avatar: '/avatars/jacob.png',
+    updatedAt: '2024-10-22T08:06:07Z',
   },
   {
-    id: "doc-4",
-    fileName: "Notice of Intent to File Suit",
-    owner: "Jane Cooper",
-    avatar: "/avatars/jane.png",
-    updatedAt: "2024-08-22T17:06:07Z",
+    id: 'doc-4',
+    fileName: 'Notice of Intent to File Suit',
+    owner: 'Jane Cooper',
+    avatar: '/avatars/jane.png',
+    updatedAt: '2024-08-22T17:06:07Z',
   },
   {
-    id: "doc-5",
-    fileName: "Notice of Termination of Payment Plan",
-    owner: "Esther Howard",
-    avatar: "/avatars/esther.png",
-    updatedAt: "2024-06-22T17:06:07Z",
+    id: 'doc-5',
+    fileName: 'Notice of Termination of Payment Plan',
+    owner: 'Esther Howard',
+    avatar: '/avatars/esther.png',
+    updatedAt: '2024-06-22T17:06:07Z',
   },
   {
-    id: "doc-6",
-    fileName: "Writ of Execution",
-    owner: "Cameron Williamson",
-    avatar: "/avatars/cameron.png",
-    updatedAt: "2024-06-22T08:06:07Z",
+    id: 'doc-6',
+    fileName: 'Writ of Execution',
+    owner: 'Cameron Williamson',
+    avatar: '/avatars/cameron.png',
+    updatedAt: '2024-06-22T08:06:07Z',
   },
   {
-    id: "doc-7",
-    fileName: "Compliance Report",
-    owner: "Floyd Miles",
-    avatar: "/avatars/floyd.png",
-    updatedAt: "2024-06-22T17:06:07Z",
+    id: 'doc-7',
+    fileName: 'Compliance Report',
+    owner: 'Floyd Miles',
+    avatar: '/avatars/floyd.png',
+    updatedAt: '2024-06-22T17:06:07Z',
   },
   {
-    id: "doc-8",
-    fileName: "Answer to Complaint",
-    owner: "Eleanor Pena",
-    avatar: "/avatars/eleanor.png",
-    updatedAt: "2024-06-22T17:06:07Z",
+    id: 'doc-8',
+    fileName: 'Answer to Complaint',
+    owner: 'Eleanor Pena',
+    avatar: '/avatars/eleanor.png',
+    updatedAt: '2024-06-22T17:06:07Z',
   },
 ];
 
-function sortByDate(data: AppDocument[], direction: "asc" | "desc") {
+function sortByDate(data: AppDocument[], direction: 'asc' | 'desc') {
   return [...data].sort((a, b) => {
     const dateA = new Date(a.updatedDate).getTime();
     const dateB = new Date(b.updatedDate).getTime();
-    return direction === "asc" ? dateA - dateB : dateB - dateA;
+    return direction === 'asc' ? dateA - dateB : dateB - dateA;
   });
 }
 
@@ -79,13 +79,16 @@ const DocsPage = () => {
 
   const router = useRouter();
   useEffect(() => {
-    if (status === "unauthenticated") {
-      console.log("redirecting to sign-in");
-      router.push("/sign-in");
+    console.log('status in DocsPage', status);
+    console.log('session in DocsPage', session);
+
+    if (status === 'unauthenticated') {
+      console.log('NAVIGATE FROM DOCUMENTS TO SIGNIN');
+      router.push('/sign-in');
     }
   }, [status, router]);
   const [columnsData, setColumnsData] = useState<AppDocument[]>([]);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     async function fetchForUI() {
@@ -96,10 +99,7 @@ const DocsPage = () => {
     fetchForUI();
   }, [sortDirection]);
 
-  if (status === "loading") return null;
-
-  console.log("status", status);
-  console.log("session", session);
+  if (status === 'loading') return null;
 
   return (
     <div className="px-6 py-6 w-full flex flex-col h-[calc(100vh-64px)] gap-6 ">
@@ -150,7 +150,7 @@ const EmptyState = () => {
 };
 const UploadBtn = () => {
   return (
-    <Button variant={"primary"}>
+    <Button variant={'primary'}>
       <Image
         src="/icon-upload.svg"
         alt="upload"

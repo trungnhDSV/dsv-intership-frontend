@@ -1,11 +1,19 @@
+'use client';
 import SignInForm from '@/app/(auth)/sign-in/SignInForm';
-import { auth } from '@/auth';
-import { redirect } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-const SignInPage = async () => {
-  const session = await auth();
-  console.log('Session:', session);
-  if (session) redirect('/');
+const SignInPage = () => {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  useEffect(() => {
+    if (status === 'authenticated') {
+      console.log('Session found, redirecting to documents');
+      console.log('Session:', session);
+      router.push('/documents');
+    }
+  }, [session, status, router]);
   return <SignInForm />;
 };
 
