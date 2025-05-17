@@ -1,27 +1,27 @@
-"use client";
-import SignOutBtn from "@/components/SignOutBtn";
-import { NavbarHeight } from "@/constants/UI";
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
+'use client';
+import SignOutBtn from '@/components/SignOutBtn';
+import { NavbarHeight } from '@/constants/UI';
+import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { useSession } from "next-auth/react";
-import Image from "next/image";
-import React from "react";
+} from '@radix-ui/react-dropdown-menu';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import React from 'react';
 
 const MainNav = () => {
   const { data: session, status } = useSession();
-  if (status === "loading" || !session) return null;
+  if (status === 'loading' || !session) return null;
   return (
     <nav
-      className="w-full bg-white shadow-md flex items-center fixed"
+      className="w-full bg-white shadow-md flex items-center fixed z-100"
       style={{ height: `${NavbarHeight}px` }}
     >
       <Image
-        src={"/logo.png"}
+        src={'/logo.png'}
         width={100}
         height={100}
         alt="logo"
