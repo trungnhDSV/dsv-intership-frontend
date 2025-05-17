@@ -102,7 +102,7 @@ export default function VerifyPage() {
         });
 
         if (login?.ok) {
-          router.push('/'); // hoặc bất kỳ route nào
+          router.push('/documents'); // hoặc bất kỳ route nào
         }
       } catch (err) {
         setStatus('error');
@@ -123,13 +123,6 @@ export default function VerifyPage() {
   }
 
   return (
-    // <div className="flex items-center justify-center h-screen text-center">
-    //   {status === "pending" && <p>🔄 Đang xác minh tài khoản...</p>}
-    //   {status === "success" && (
-    //     <p>✅ Xác minh thành công! Đang chuyển hướng...</p>
-    //   )}
-    //   {status === "error" && <p>❌ Token không hợp lệ hoặc đã hết hạn.</p>}
-    // </div>
     <div className="flex w-screen h-screen">
       <VerifyNav />
       <div
