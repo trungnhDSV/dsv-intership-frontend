@@ -1,12 +1,12 @@
-"use server";
+'use server';
 
-import { signIn } from "@/auth";
+import { signIn } from '@/auth';
 import {
   signInSchema,
   SignInValues,
   signUpSchema,
   SignUpValues,
-} from "@/lib/validators/auth";
+} from '@/lib/validators/auth';
 
 export type SignInState = {
   success?: boolean;
@@ -20,40 +20,41 @@ export async function signInAction(
   formData: FormData
 ): Promise<SignInState> {
   const values = {
-    email: String(formData.get("email") ?? ""),
-    password: String(formData.get("password") ?? ""),
+    email: String(formData.get('email') ?? ''),
+    password: String(formData.get('password') ?? ''),
   };
 
   const validated = signInSchema.safeParse(values);
 
   console.log(values);
   if (!validated.success) {
-    console.log("Validation failed", validated.error.flatten().fieldErrors);
+    console.log('Validation failed', validated.error.flatten().fieldErrors);
     return {
       errors: validated.error.flatten().fieldErrors,
     };
   }
   try {
-    await signIn("credentials", {
+    await signIn('email-password', {
       email: values.email,
       password: values.password,
       redirect: false,
+      callbackUrl: '/documents',
     });
     return { success: true };
   } catch (error) {
-    console.error("Sign in failed", error);
+    console.error('Sign in failed', error);
     return {
-      message: "Invalid email or password",
+      message: 'Invalid email or password',
       errors: {
-        email: ["Invalid email or password"],
-        password: ["Invalid email or password"],
+        email: ['Invalid email or password'],
+        password: ['Invalid email or password'],
       },
     };
   }
 }
 
 export async function googleSignInAction() {
-  await signIn("google");
+  await signIn('google');
 }
 
 export type SignUpState = {
@@ -67,11 +68,11 @@ export async function signUpAction(
   formData: FormData
 ): Promise<SignUpState> {
   const values = {
-    fullName: String(formData.get("fullName") ?? ""),
-    email: String(formData.get("email") ?? ""),
-    password: String(formData.get("password") ?? ""),
-    confirmPassword: String(formData.get("confirmPassword") ?? ""),
-    terms: formData.get("terms") === "on" ? true : false,
+    fullName: String(formData.get('fullName') ?? ''),
+    email: String(formData.get('email') ?? ''),
+    password: String(formData.get('password') ?? ''),
+    confirmPassword: String(formData.get('confirmPassword') ?? ''),
+    terms: formData.get('terms') === 'on' ? true : false,
   };
 
   const result = signUpSchema.safeParse(values);
@@ -83,12 +84,12 @@ export async function signUpAction(
     };
   }
   try {
-    console.log("Sign up values:", values);
+    console.log('Sign up values:', values);
     const signupRes = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: values.fullName,
           email: values.email,
@@ -98,34 +99,35 @@ export async function signUpAction(
     );
 
     if (!signupRes.ok) {
-      console.error("Sign up failed", signupRes);
+      console.error('Sign up failed', signupRes);
 
       const error = await signupRes.json();
-      if (error?.message === "Email in use") {
+      if (error?.message === 'Email in use') {
         return {
-          message: "Existing email",
+          message: 'Existing email',
           errors: {
-            email: ["Existing email"],
+            email: ['Existing email'],
           },
           values,
         };
       }
       return {
-        message: error.message || "Sign up failed",
+        message: error.message || 'Sign up failed',
         values,
       };
     }
     const signupData = await signupRes.json();
-    console.log("Sign up successful:", signupData);
+    console.log('Sign up successful:', signupData);
+    console.log('Waiting for email verification');
 
     return {
       success: true,
       values,
     };
   } catch (err) {
-    console.error("Sign up failed", err);
+    console.error('Sign up failed', err);
     return {
-      message: "Something went wrong while signing up",
+      message: 'Something went wrong while signing up',
       values,
     };
   }

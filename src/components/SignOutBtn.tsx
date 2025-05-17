@@ -1,5 +1,4 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import { signOut } from 'next-auth/react';
 
 const SignOutBtn = () => {
@@ -7,13 +6,7 @@ const SignOutBtn = () => {
     await signOut();
   };
 
-  return (
-    <div className="flex justify-center">
-      <Button variant="destructive" onClick={handleSignOut}>
-        Sign Out
-      </Button>
-    </div>
-  );
+  return <button onClick={handleSignOut}>SignOut</button>;
 };
 
 export default SignOutBtn;
