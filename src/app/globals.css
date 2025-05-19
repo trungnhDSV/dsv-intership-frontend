@@ -133,3 +133,22 @@
 ::-webkit-scrollbar-track {
   @apply rounded-full bg-transparent;
 }
+
+.my-custom-toast {
+  width: 392px !important;
+  max-width: 392px !important;
+  height: fit-content !important;
+}
+
+.custom-toast-icon-top [data-icon] {
+  align-self: flex-start !important;
+}
+
+.custom-toast-icon-top [data-content] {
+  align-items: flex-start !important;
+}
+
+.custom-error-toast {
+  border: 1px solid #ef4444 !important;
+  background-color: #fef2f2 !important;
+}

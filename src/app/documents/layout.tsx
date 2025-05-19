@@ -10,7 +10,7 @@ const layout = ({
   return (
     <div>
       <MainNav />
-      <div style={{ paddingTop: `${NavbarHeight}px` }}>{children}</div>
+      <main style={{ paddingTop: `${NavbarHeight}px` }}>{children}</main>
     </div>
   );
 };

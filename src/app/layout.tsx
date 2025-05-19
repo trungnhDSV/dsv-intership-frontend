@@ -3,6 +3,7 @@ import { Inter as FontSans, Geist_Mono as FontMono } from 'next/font/google';
 import './globals.css';
 import AppWrapper from '@/components/AppWrapper';
 import { SessionProvider } from 'next-auth/react';
+import { Toaster } from '@/components/ui/sonner';
 
 const fontSans = FontSans({
   variable: '--font-font-sans',
@@ -34,6 +35,11 @@ export default function RootLayout({
         <SessionProvider>
           <AppWrapper>
             <main className="flex-1">{children}</main>
+            <Toaster
+              toastOptions={{
+                className: 'my-custom-toast',
+              }}
+            />
           </AppWrapper>
         </SessionProvider>
       </body>

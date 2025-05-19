@@ -8,6 +8,6 @@ export default function AppWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  useAutoLogout(30 * 1000);
+  useAutoLogout();
   return <>{children}</>;
 }
