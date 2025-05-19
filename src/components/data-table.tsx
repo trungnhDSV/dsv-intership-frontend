@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -14,8 +14,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -31,7 +32,7 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
+  const router = useRouter();
   return (
     <div className="w-full h-full flex flex-col">
       <div className="rounded-md border flex flex-col overflow-hidden">
@@ -45,10 +46,10 @@ export function DataTable<TData, TValue>({
                       <TableHead
                         key={header.id}
                         className={cn(
-                          'px-4',
-                          header.id === 'fileName' && 'w-full',
-                          header.id === 'owner' && 'min-w-[280px]',
-                          header.id === 'updatedDate' && 'w-fit'
+                          "px-4",
+                          header.id === "name" && "w-full",
+                          header.id === "ownerName" && "min-w-[280px]",
+                          header.id === "uploadAt" && "w-fit"
                         )}
                       >
                         {header.isPlaceholder
@@ -67,11 +68,17 @@ export function DataTable<TData, TValue>({
           <TableBody className="">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
+                console.log(row);
                 return (
                   <TableRow
                     className="px-4 h-18"
                     key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={() => {
+                      router.push(
+                        `/documents/${(row.original as { id: string }).id}`
+                      );
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="px-4 font-medium">

@@ -1,8 +1,8 @@
-console.log('🔥 INIT AUTH CONFIG');
+console.log("🔥 INIT AUTH CONFIG");
 
-import NextAuth from 'next-auth';
-import Google from 'next-auth/providers/google';
-import Credentials from 'next-auth/providers/credentials';
+import NextAuth from "next-auth";
+import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const AUTH_SECRET = process.env.AUTH_SECRET;
@@ -10,7 +10,7 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
 if (!API_URL || !AUTH_SECRET || !GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-  throw new Error('Missing required environment variables');
+  throw new Error("Missing required environment variables");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -28,19 +28,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
     Credentials({
-      id: 'email-password',
-      name: 'Email/Password',
+      id: "email-password",
+      name: "Email/Password",
       credentials: {
-        email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
+        email: { label: "Email", type: "text" },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log('Email/Password ', credentials);
+        console.log("Email/Password ", credentials);
         try {
           const res = await fetch(`${API_URL}/auth/signin`, {
-            method: 'POST',
+            method: "POST",
             body: JSON.stringify(credentials),
-            headers: { 'Content-Type': 'application/json' },
+            headers: { "Content-Type": "application/json" },
           });
 
           const data: {
@@ -56,13 +56,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           } = await res.json();
 
           if (!res.ok) {
-            throw new Error(data.message || 'Invalid credentials');
+            throw new Error(data.message || "Invalid credentials");
           }
 
-          console.log('data', data);
+          console.log("data", data);
 
           if (data?.data?.token) {
-            console.log('VALID TOKEN', data.data.token);
+            console.log("VALID TOKEN", data.data.token);
             return {
               id: data.data.user.id,
               email: data.data.user.email,
@@ -72,30 +72,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
           return null;
         } catch (error) {
-          console.error('Credentials auth error:', error);
-          throw new Error('Authentication failed. Please try again.');
+          console.error("Credentials auth error:", error);
+          throw new Error("Authentication failed. Please try again.");
         }
       },
     }),
     Credentials({
-      id: 'magic-link',
-      name: 'Magic Link',
+      id: "magic-link",
+      name: "Magic Link",
       credentials: {
-        token: { label: 'Token', type: 'text' },
+        token: { label: "Token", type: "text" },
       },
       async authorize(credentials) {
         try {
-          console.log('Magic link ', credentials);
+          console.log("Magic link ", credentials);
           const res = await fetch(`${API_URL}/auth/verify-login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: credentials?.token }),
           });
 
           const data = await res.json();
 
           if (!res.ok || !data?.data?.token) {
-            throw new Error(data?.message || 'Invalid verification link');
+            throw new Error(data?.message || "Invalid verification link");
           }
 
           return {
@@ -105,7 +105,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             token: data.data.token,
           };
         } catch (error) {
-          console.error('Magic link auth error:', error);
+          console.error("Magic link auth error:", error);
           return null;
         }
       },
@@ -113,21 +113,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === 'google') {
+      if (account?.provider === "google") {
         try {
           const res = await fetch(`${API_URL}/auth/oauth-check`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: user.email, fullName: user.name }),
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: user.email,
+              fullName: user.name,
+            }),
           });
 
           if (!res.ok) {
             const error = await res.json();
             throw new Error(error.message);
           }
+          const data = await res.json();
+          user.id = data.data.user.id;
           return true;
         } catch (error) {
-          console.error('OAuth check failed:', error);
+          console.error("OAuth check failed:", error);
           return `/sign-in?error=email-exists`;
         }
       }
@@ -142,10 +147,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user: { id: string; email: string; name: string; token: string };
       account: unknown;
     }) {
-      console.log('JWT CALLBACK', token, user, account);
       if (account && user) {
-        console.log('SUCCESSFUL LOGIN');
-        if (account.provider === 'google') {
+        if (account.provider === "google") {
           token.accessToken = account.access_token;
         } else token.accessToken = user.token;
         token.user = {
@@ -154,20 +157,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
         };
       }
-      console.log('JWT token', token);
       return token;
     },
     async session({ session, token }) {
-      console.log('SESSION CALLBACK', session, token);
       session.accessToken = token.accessToken;
       session.user = token.user;
-      console.log('SESSION', session);
-
       return session;
     },
   },
   session: {
-    strategy: 'jwt',
+    strategy: "jwt",
     maxAge: 24 * 60 * 60,
   },
   secret: AUTH_SECRET,

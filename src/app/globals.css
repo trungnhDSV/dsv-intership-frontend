@@ -1,5 +1,5 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -138,6 +138,12 @@
   width: 392px !important;
   max-width: 392px !important;
   height: fit-content !important;
+  padding: 16px !important;
+  display: flex !important;
+}
+
+.my-custom-toast .toast-content-wrapper {
+  width: 100%;
 }
 
 .custom-toast-icon-top [data-icon] {
@@ -146,9 +152,19 @@
 
 .custom-toast-icon-top [data-content] {
   align-items: flex-start !important;
+  width: 100% !important;
+}
+
+.custom-toast-icon-top [data-content] [data-title] {
+  width: 100% !important;
 }
 
 .custom-error-toast {
   border: 1px solid #ef4444 !important;
   background-color: #fef2f2 !important;
+}
+
+.custom-success-toast {
+  border: 1px solid #14ae5c !important;
+  background-color: #ebffee !important;
 }

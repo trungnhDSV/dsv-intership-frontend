@@ -1,23 +1,29 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Progress } from '@/components/ui/progress';
+import { useState, useRef } from "react";
+import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { showErrorToast } from '@/components/ErrorToast';
-import { MAX_SIZE } from '@/constants/UI';
-import { checkPdfPassword } from '@/lib/pdf-util';
-import { Session } from 'next-auth';
-import { toast } from 'sonner';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { showErrorToast, showSuccessToast } from "@/components/CustomToast";
+import { MAX_SIZE } from "@/constants/UI";
+import { checkPdfPassword } from "@/lib/pdf-util";
+import { Session } from "next-auth";
+import { toast } from "sonner";
+import { AppDocument } from "@/app/documents/column";
 
-export function UploadDialog({ session }: { session: Session | null }) {
+interface UploadDialogProps {
+  session: Session | null;
+  onUploadSuccess?: (newDocs: AppDocument) => void;
+}
+
+export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,7 +32,7 @@ export function UploadDialog({ session }: { session: Session | null }) {
 
   // Xử lý khi chọn file
   const handleButtonClick = () => {
-    console.log('CLICKING file input');
+    console.log("CLICKING file input");
     if (!fileInputRef.current) return;
     fileInputRef.current.click();
   };
@@ -36,48 +42,48 @@ export function UploadDialog({ session }: { session: Session | null }) {
     setSelectedFile(file);
 
     if (!file || !session?.user?.id) {
-      console.error('No file selected or user ID not found');
+      console.error("No file selected or user ID not found");
       console.log(session);
       console.log(file);
       return;
     }
-    console.log('CHECKING file:', file);
+    console.log("CHECKING file:", file);
     if (file.size > MAX_SIZE) {
       showErrorToast({
-        title: 'Cannot Upload This File',
+        title: "Cannot Upload This File",
         description:
-          'Please ensure the upload file is not more than 20MB and in .pdf format',
+          "Please ensure the upload file is not more than 20MB and in .pdf format",
       });
       return;
     }
 
-    console.log('CHECKING password');
+    console.log("CHECKING password");
     const hasPassword = await checkPdfPassword(file);
     if (hasPassword) {
       showErrorToast({
-        title: 'Cannot Upload This File',
-        description: 'Please ensure the upload file does not require password',
+        title: "Cannot Upload This File",
+        description: "Please ensure the upload file does not require password",
       });
       return;
     }
-    console.log('Start uploading file:', file);
+    console.log("Start uploading file:", file);
 
     setIsDialogOpen(true);
     setIsUploading(true);
     setProgress(0);
 
     // Step 1: Request upload URL
-    console.log('FETCHING ' + `${process.env.NEXT_PUBLIC_API_URL}/upload-url`);
+    console.log("FETCHING " + `${process.env.NEXT_PUBLIC_API_URL}/upload-url`);
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload-url`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         fileName: file.name,
         fileType: file.type,
         userId: session.user.id,
       }),
     });
-    console.log('Request upload URL response:', res);
+    console.log("Request upload URL response:", res);
     const data: {
       data: {
         url: string;
@@ -88,40 +94,42 @@ export function UploadDialog({ session }: { session: Session | null }) {
 
     const xhr = new XMLHttpRequest();
 
-    xhr.upload.addEventListener('progress', (event) => {
+    xhr.upload.addEventListener("progress", (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100);
         setProgress(percent);
       }
     });
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener("load", () => {
       setIsUploading(false);
       if (xhr.status >= 200 && xhr.status < 300) {
-        toast.success('Upload thành công!');
+        showSuccessToast({
+          title: "Uploaded successfully",
+        });
         setIsDialogOpen(false);
         setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
       } else {
-        toast.error('Upload thất bại!');
+        toast.error("Uploaded Fail!");
       }
     });
 
-    xhr.addEventListener('error', () => {
+    xhr.addEventListener("error", () => {
       setIsUploading(false);
-      toast.error('Lỗi kết nối!');
+      toast.error("Lỗi kết nối!");
     });
 
-    xhr.open('PUT', url, true);
-    xhr.setRequestHeader('Content-Type', file.type);
+    xhr.open("PUT", url, true);
+    xhr.setRequestHeader("Content-Type", file.type);
     xhr.send(file);
 
     // Step 3: Save metadata to backend
     const metaRes = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/documents`,
       {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: file.name,
           s3Key,
@@ -132,7 +140,10 @@ export function UploadDialog({ session }: { session: Session | null }) {
       }
     );
     const result = await metaRes.json();
-    console.log('✅ Document saved:', result);
+    console.log("✅ Document saved:", result);
+    if (onUploadSuccess && result?.data) {
+      onUploadSuccess(result.data); // result.data là document mới
+    }
   };
 
   return (
@@ -147,10 +158,10 @@ export function UploadDialog({ session }: { session: Session | null }) {
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) {
-              console.log('START HANDLE UPLOAD');
+              console.log("START HANDLE UPLOAD");
               handleUpload(file);
             }
-            e.target.value = '';
+            e.target.value = "";
           }}
         />
 
@@ -181,7 +192,7 @@ export function UploadDialog({ session }: { session: Session | null }) {
             {isUploading && (
               <div className="flex items-center w-[416px] gap-2 pb-4">
                 <Image
-                  src={'/PDF-file-type.png'}
+                  src={"/PDF-file-type.png"}
                   alt="pdf"
                   width={100}
                   height={100}
