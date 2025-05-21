@@ -24,13 +24,7 @@ const MainNav = () => {
       style={{ height: `${NavbarHeight}px` }}
     >
       <Link href={'/documents'}>
-        <Image
-          src={'/logo.png'}
-          width={100}
-          height={100}
-          alt='logo'
-          className='w-8 h-8 ml-6'
-        />
+        <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8 ml-6' />
       </Link>
       <div className='flex flex-1 justify-end pr-6 items-center gap-4'>
         <p className='text-[14px]'>Good Morning, {session.user?.name}</p>
@@ -40,11 +34,7 @@ const MainNav = () => {
             isOpen && 'ring-[#F2385A]'
           )}
         >
-          <DropdownMenu
-            dir='ltr'
-            open={isOpen}
-            onOpenChange={() => setIsOpen(!isOpen)}
-          >
+          <DropdownMenu dir='ltr' open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}>
             <DropdownMenuTrigger asChild>
               <Avatar className='w-full h-full rounded-full bg-[#F5C731] flex items-center justify-center'>
                 <AvatarFallback className='text-xs font-medium text-gray-900'>

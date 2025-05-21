@@ -33,15 +33,12 @@ export default VerifyPage;
 const SendVerificationEmail = ({ email }: { email: string }) => {
   const handleResendVerification = async () => {
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify?email=${email}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify?email=${email}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!res.ok) {
         throw new Error('Failed to resend verification email');
@@ -62,8 +59,8 @@ const SendVerificationEmail = ({ email }: { email: string }) => {
       />
       <p className='font-bold text-[32px]'>Verify your email address</p>
       <p>
-        We&apos;ve just sent a verification email to{' '}
-        <span className='font-semibold'>{email}</span>. Please check your inbox
+        We&apos;ve just sent a verification email to <span className='font-semibold'>{email}</span>.
+        Please check your inbox
       </p>
       <p>
         Didn&apos;t receive an email?{' '}

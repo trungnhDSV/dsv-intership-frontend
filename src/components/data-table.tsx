@@ -1,11 +1,6 @@
 'use client';
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 import {
   Table,
@@ -23,10 +18,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
 }
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -34,8 +26,8 @@ export function DataTable<TData, TValue>({
   });
   const router = useRouter();
   return (
-    <div className='w-full h-full flex flex-col'>
-      <div className='rounded-md border flex flex-col overflow-hidden'>
+    <div className='w-full h-full flex flex-col '>
+      <div className='rounded-md border'>
         <Table>
           <TableHeader className='bg-[#F5F5F5] h-10 sticky top-0 z-10 shadow-sm'>
             {table.getHeaderGroups().map((headerGroup) => {
@@ -54,10 +46,7 @@ export function DataTable<TData, TValue>({
                       >
                         {header.isPlaceholder
                           ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                       </TableHead>
                     );
                   })}
@@ -74,17 +63,12 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     onClick={() => {
-                      router.push(
-                        `/documents/${(row.original as { id: string }).id}`
-                      );
+                      router.push(`/documents/${(row.original as { id: string }).id}`);
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className='px-4 font-medium'>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -92,10 +76,7 @@ export function DataTable<TData, TValue>({
               })
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-24 text-center'
-                >
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
                   No results.
                 </TableCell>
               </TableRow>

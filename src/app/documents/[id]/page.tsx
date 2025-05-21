@@ -41,15 +41,12 @@ const DocPage = () => {
     if (!id) return;
     const fetchDoc = async () => {
       try {
-        const s3KeyRes = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + `/documents/${id}`
-        );
+        const s3KeyRes = await fetch(process.env.NEXT_PUBLIC_API_URL + `/documents/${id}`);
         const docData = await s3KeyRes.json();
         setDoc(docData.data);
 
         const urlRes = await fetch(
-          process.env.NEXT_PUBLIC_API_URL +
-            `/documents/presign?s3Key=${docData.data.s3Key}`
+          process.env.NEXT_PUBLIC_API_URL + `/documents/presign?s3Key=${docData.data.s3Key}`
         );
         const urlData = await urlRes.json();
         setUrl(urlData.data.url);
@@ -64,10 +61,7 @@ const DocPage = () => {
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(
-          containerRef.current.clientWidth -
-            containerRef.current.clientWidth / 2
-        );
+        setContainerWidth(containerRef.current.clientWidth - containerRef.current.clientWidth / 2);
       }
     };
     updateWidth();
@@ -174,45 +168,29 @@ const DocPage = () => {
       <div className='flex items-center justify-between'>
         <div className='flex items-center'>
           <div className='p-5 mr-3'>
-            <ArrowLeft
-              className='h-5 w-5 cursor-pointer'
-              onClick={() => router.back()}
-            />
+            <ArrowLeft className='h-5 w-5 cursor-pointer' onClick={() => router.back()} />
           </div>
           <p className='font-semibold text-2xl'>{doc?.name}</p>
         </div>
         <div className='flex items-center gap-3'>
-          <Button
-            variant='outline'
-            className='w-fit bg-[#E3E3E3] border-[#767676]'
-          >
+          <Button variant='outline' className='w-fit bg-[#E3E3E3] border-[#767676]'>
             <Download className='mr-2 h-4 w-4' />
             Download
           </Button>
-          <Button
-            variant='outline'
-            className='w-fit bg-[#E3E3E3] border-[#767676]'
-          >
+          <Button variant='outline' className='w-fit bg-[#E3E3E3] border-[#767676]'>
             <Share className='mr-2 h-4 w-4' />
             Share
           </Button>
         </div>
       </div>
 
-      <div
-        ref={containerRef}
-        className='flex-1 flex justify-center bg-[#F5F5F5] overflow-auto'
-      >
+      <div ref={containerRef} className='flex-1 flex justify-center bg-[#F5F5F5] overflow-auto'>
         <Document
           className={'pt-6'}
           file={url}
           onLoadSuccess={({ numPages }) => setNumPages(numPages)}
           loading={<div className='text-center p-4'>Loading PDF...</div>}
-          error={
-            <div className='text-center p-4 text-red-500'>
-              Failed to load PDF
-            </div>
-          }
+          error={<div className='text-center p-4 text-red-500'>Failed to load PDF</div>}
         >
           <Page
             pageNumber={currentPage}

@@ -17,22 +17,12 @@ const Layout = ({
       />
       <div className='flex flex-col gap-4'>
         <div className='flex items-center justify-center bg-sidebar-primary-foreground text-xl font-bold px-3 py-1 rounded-sm gap-1'>
-          <Image
-            src={'/logo.png'}
-            width={100}
-            height={100}
-            alt='logo'
-            className='w-8 h-8'
-          />
+          <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8' />
           DI-PDF
         </div>
         <div className='flex flex-col gap-0'>
-          <p className='text-sm font-light text-white'>
-            A world where document collaboration is{' '}
-          </p>
-          <span className='text-sm font-bold text-white'>
-            fast, fun and easy
-          </span>
+          <p className='text-sm font-light text-white'>A world where document collaboration is </p>
+          <span className='text-sm font-bold text-white'>fast, fun and easy</span>
         </div>
       </div>
       <div className='mr-20'>{children}</div>

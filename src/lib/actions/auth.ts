@@ -1,12 +1,7 @@
 'use server';
 
 import { signIn } from '@/auth';
-import {
-  signInSchema,
-  SignInValues,
-  signUpSchema,
-  SignUpValues,
-} from '@/lib/validators/auth';
+import { signInSchema, SignInValues, signUpSchema, SignUpValues } from '@/lib/validators/auth';
 
 export type SignInState = {
   success?: boolean;
@@ -86,18 +81,15 @@ export async function signUpAction(
   }
   try {
     console.log('Sign up values:', values);
-    const signupRes = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fullName: values.fullName,
-          email: values.email,
-          password: values.password,
-        }),
-      }
-    );
+    const signupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+      }),
+    });
 
     if (!signupRes.ok) {
       console.error('Sign up failed', signupRes);

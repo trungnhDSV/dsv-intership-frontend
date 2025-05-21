@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import React from 'react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -34,10 +35,7 @@ export const ZoomControls = ({
   const submitZoomInput = () => {
     const numericValue = parseInt(zoomInput);
     if (!isNaN(numericValue)) {
-      const clampedValue = Math.max(
-        MIN_ZOOM * 100,
-        Math.min(MAX_ZOOM * 100, numericValue)
-      );
+      const clampedValue = Math.max(MIN_ZOOM * 100, Math.min(MAX_ZOOM * 100, numericValue));
       setZoom(clampedValue / 100);
     }
     setIsEditingZoom(false);
@@ -106,11 +104,7 @@ export const ZoomControls = ({
         {/* Dropdown trigger */}
         <DropdownMenu onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant='ghost'
-              className='px-2 rounded-none'
-              disabled={isEditingZoom}
-            >
+            <Button variant='ghost' className='px-2 rounded-none' disabled={isEditingZoom}>
               {dropdownOpen ? (
                 <ChevronUp className='h-4 w-4' />
               ) : (

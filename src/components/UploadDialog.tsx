@@ -47,8 +47,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     if (file.size > MAX_FILE_SIZE) {
       showErrorToast({
         title: 'Cannot Upload This File',
-        description:
-          'Please ensure the upload file is not more than 20MB and in .pdf format',
+        description: 'Please ensure the upload file is not more than 20MB and in .pdf format',
       });
       return;
     }
@@ -101,20 +100,17 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
           title: 'Uploaded successfully',
         });
 
-        const metaRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/documents`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: file.name,
-              s3Key,
-              fileSize: file.size,
-              fileType: file.type,
-              ownerId: session!.user!.id,
-            }),
-          }
-        );
+        const metaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: file.name,
+            s3Key,
+            fileSize: file.size,
+            fileType: file.type,
+            ownerId: session!.user!.id,
+          }),
+        });
         const result: {
           data: FileMetadata;
         } | null = await metaRes.json();
@@ -162,13 +158,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
 
         <label htmlFor='fileUpload'>
           <Button variant='primary' type='button' onClick={handleButtonClick}>
-            <Image
-              src='/icon-upload.svg'
-              alt='upload'
-              width={16}
-              height={16}
-              className='mr-2'
-            />
+            <Image src='/icon-upload.svg' alt='upload' width={16} height={16} className='mr-2' />
             Upload Document
           </Button>
         </label>

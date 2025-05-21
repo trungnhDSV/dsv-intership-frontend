@@ -37,13 +37,7 @@ const SignInForm = () => {
     <div className='bg-white rounded-xl p-12 flex flex-col gap-10'>
       <div className='flex justify-center'>
         <h1 className='text-5xl font-bold tracking-tight'>Sign In</h1>
-        <Image
-          src={'/logo.png'}
-          width={100}
-          height={100}
-          alt='logo'
-          className='w-8 h-8'
-        />
+        <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8' />
       </div>
       <div className='flex flex-col gap-10'>
         <GoogleSignIn />
@@ -55,15 +49,11 @@ const SignInForm = () => {
           </div>
           {error === 'email-exists' && (
             <div className=' bg-[#FEE9E7] mt-1 px-3 py-4 rounded-md text-xs border-l-[#900B09] border-l-2 w-[360px]'>
-              This email address is currently being used with email & password.
-              Please sign in with email & password
+              This email address is currently being used with email & password. Please sign in with
+              email & password
             </div>
           )}
-          <form
-            ref={formRef}
-            action={formAction}
-            className='flex flex-col gap-4'
-          >
+          <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
             <div>
               <p className='mb-1'>
                 Email <span className='text-[#EC221F]'>*</span>
@@ -77,12 +67,9 @@ const SignInForm = () => {
                 autoComplete='email'
                 className={state?.errors?.email ? 'border-red-800' : ''}
               />
-              {state?.errors?.email &&
-                state.errors?.email[0] !== 'Invalid email or password' && (
-                  <p className='text-sm text-[#900B09] mt-1'>
-                    {state.errors.email[0]}
-                  </p>
-                )}
+              {state?.errors?.email && state.errors?.email[0] !== 'Invalid email or password' && (
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.email[0]}</p>
+              )}
             </div>
             <div>
               <p className='mb-1'>
@@ -98,16 +85,10 @@ const SignInForm = () => {
                 className={state?.errors?.password ? 'border-red-800' : ''}
               />
               {state?.errors?.password && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.password[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.password[0]}</p>
               )}
             </div>
-            <Button
-              variant={'primary'}
-              type='submit'
-              className='w-[360px] mt-2'
-            >
+            <Button variant={'primary'} type='submit' className='w-[360px] mt-2'>
               Sign In
             </Button>
           </form>
@@ -116,9 +97,7 @@ const SignInForm = () => {
           <p>
             Do not have an account?{' '}
             <Link href='/sign-up'>
-              <span className='text-primary font-bold hover:underline'>
-                Sign up
-              </span>
+              <span className='text-primary font-bold hover:underline'>Sign up</span>
             </Link>
           </p>
         </div>

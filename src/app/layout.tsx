@@ -6,6 +6,7 @@ import { SessionProvider } from 'next-auth/react';
 import { Toaster } from '@/components/ui/sonner';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
+import React from 'react';
 
 const fontSans = FontSans({
   variable: '--font-font-sans',

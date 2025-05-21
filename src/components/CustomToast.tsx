@@ -22,11 +22,7 @@ const ToastCloseButton = ({ color }: { color: string }) => (
   </button>
 );
 
-export function showErrorToast({
-  title,
-  description,
-  duration = 5000,
-}: ToastProps) {
+export function showErrorToast({ title, description, duration = 5000 }: ToastProps) {
   return toast.error(
     <div className='flex flex-col'>
       <div className='flex items-center justify-between'>
@@ -43,11 +39,7 @@ export function showErrorToast({
   );
 }
 
-export function showSuccessToast({
-  title,
-  description,
-  duration = 5000,
-}: ToastProps) {
+export function showSuccessToast({ title, description, duration = 5000 }: ToastProps) {
   return toast.success(
     <div className='toast-content-wrapper flex flex-col'>
       <div className='flex items-center justify-between w-full'>

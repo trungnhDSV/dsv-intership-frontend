@@ -27,10 +27,7 @@ const SignUpForm = () => {
 
   useEffect(() => {
     if (state?.success) {
-      localStorage.setItem(
-        'pendingEmail',
-        state?.values?.email ? state?.values?.email : ''
-      );
+      localStorage.setItem('pendingEmail', state?.values?.email ? state?.values?.email : '');
       router.push('/verify-email');
     }
   }, [state?.success, router, state?.values?.email]);
@@ -40,13 +37,7 @@ const SignUpForm = () => {
     <div className='w-1/3 px-12 h-screen bg-white p-12 flex flex-col justify-center items-center gap-10'>
       <div className='flex justify-center gap-2'>
         <h1 className='text-5xl font-bold tracking-tight'>Sign Up</h1>
-        <Image
-          src={'/logo.png'}
-          width={100}
-          height={100}
-          alt='logo'
-          className='w-8 h-8'
-        />
+        <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8' />
       </div>
       <div className='flex flex-col gap-10'>
         <GoogleSignIn />
@@ -57,11 +48,7 @@ const SignUpForm = () => {
             <p className='text-sm'>or</p>
             <hr className='flex-1' />
           </div>
-          <form
-            ref={formRef}
-            action={formAction}
-            className='flex flex-col gap-4'
-          >
+          <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
             <div>
               <p className='mb-1'>
                 Full Name <span className='text-[#EC221F]'>*</span>
@@ -75,9 +62,7 @@ const SignUpForm = () => {
                 className={state?.errors?.fullName ? 'border-red-800' : ''}
               />
               {state?.errors?.fullName && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.fullName[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.fullName[0]}</p>
               )}
             </div>
             <div>
@@ -94,9 +79,7 @@ const SignUpForm = () => {
                 className={state?.errors?.email ? 'border-red-800' : ''}
               />
               {state?.errors?.email && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.email[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.email[0]}</p>
               )}
             </div>
             <div>
@@ -112,9 +95,7 @@ const SignUpForm = () => {
                 className={state?.errors?.password ? 'border-red-800' : ''}
               />
               {state?.errors?.password && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.password[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.password[0]}</p>
               )}
             </div>
             <div>
@@ -127,35 +108,25 @@ const SignUpForm = () => {
                 name='confirmPassword'
                 id='confirmPassword'
                 defaultValue={state?.values?.confirmPassword}
-                className={
-                  state?.errors?.confirmPassword ? 'border-red-800' : ''
-                }
+                className={state?.errors?.confirmPassword ? 'border-red-800' : ''}
               />
               {state?.errors?.confirmPassword && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.confirmPassword[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.confirmPassword[0]}</p>
               )}
             </div>
             <div>
               <div className='flex gap-2'>
-                <Checkbox
-                  id='terms'
-                  name='terms'
-                  defaultChecked={state?.values?.terms ?? true}
-                />
+                <Checkbox id='terms' name='terms' defaultChecked={state?.values?.terms ?? true} />
                 <label
                   htmlFor='terms'
                   className='text-sm font-light leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 '
                 >
-                  I accept all <b className='font-semibold'>Terms of Service</b>{' '}
-                  and <b className='font-semibold'>Privacy Policy</b>
+                  I accept all <b className='font-semibold'>Terms of Service</b> and{' '}
+                  <b className='font-semibold'>Privacy Policy</b>
                 </label>
               </div>
               {state?.errors?.terms && (
-                <p className='text-sm text-[#900B09] mt-1'>
-                  {state.errors.terms[0]}
-                </p>
+                <p className='text-sm text-[#900B09] mt-1'>{state.errors.terms[0]}</p>
               )}
             </div>
 
@@ -168,9 +139,7 @@ const SignUpForm = () => {
           <p>
             Already have an account?{' '}
             <Link href='/sign-in'>
-              <span className='text-primary font-bold hover:underline'>
-                Sign In
-              </span>
+              <span className='text-primary font-bold hover:underline'>Sign In</span>
             </Link>
           </p>
         </div>

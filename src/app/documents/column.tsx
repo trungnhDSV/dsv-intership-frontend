@@ -11,13 +11,13 @@ import { ArrowUpDown } from 'lucide-react';
 export const columns: ColumnDef<FileMetadata>[] = [
   {
     accessorKey: 'name',
-    header: ({}) => {
+    header: () => {
       return <span className='text-sm'>File name</span>;
     },
   },
   {
     accessorKey: 'ownerName',
-    header: ({}) => {
+    header: () => {
       return <span className='text-sm'>Document owner</span>;
     },
     cell: ({ row }) => {
