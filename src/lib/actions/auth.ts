@@ -26,9 +26,7 @@ export async function signInAction(
 
   const validated = signInSchema.safeParse(values);
 
-  console.log(values);
   if (!validated.success) {
-    console.log('Validation failed', validated.error.flatten().fieldErrors);
     return {
       errors: validated.error.flatten().fieldErrors,
     };
@@ -40,10 +38,8 @@ export async function signInAction(
       redirect: false,
       callbackUrl: '/documents',
     });
-    console.log('Sign in successful', data);
     return { success: true };
   } catch (error) {
-    console.error('Sign in failed', error);
     return {
       message: 'Invalid email or password',
       errors: {
@@ -85,7 +81,6 @@ export async function signUpAction(
     };
   }
   try {
-    console.log('Sign up values:', values);
     const signupRes = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/auth/signup`,
       {
@@ -100,8 +95,6 @@ export async function signUpAction(
     );
 
     if (!signupRes.ok) {
-      console.error('Sign up failed', signupRes);
-
       const error = await signupRes.json();
       if (error?.message === 'Email in use') {
         return {
@@ -117,16 +110,11 @@ export async function signUpAction(
         values,
       };
     }
-    const signupData = await signupRes.json();
-    console.log('Sign up successful:', signupData);
-    console.log('Waiting for email verification');
-
     return {
       success: true,
       values,
     };
   } catch (err) {
-    console.error('Sign up failed', err);
     return {
       message: 'Something went wrong while signing up',
       values,

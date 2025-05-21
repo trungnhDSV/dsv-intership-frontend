@@ -26,14 +26,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang='en'
       className={`${fontSans.variable} ${fontMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="antialiased min-h-screen flex flex-col">
+      <body className='antialiased min-h-screen flex flex-col'>
         <SessionProvider>
           <AppWrapper>
-            <main className="flex-1">{children}</main>
+            <main className='flex-1'>{children}</main>
           </AppWrapper>
         </SessionProvider>
       </body>

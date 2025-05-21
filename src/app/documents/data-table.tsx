@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 
 import {
   Table,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -32,14 +32,14 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border">
+    <div className='rounded-md border'>
       <Table>
-        <TableHeader className="bg-[#F5F5F5] h-10">
+        <TableHeader className='bg-[#F5F5F5] h-10'>
           {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className={""}>
+            <TableRow key={headerGroup.id} className={''}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id} className="px-4 text-sm">
+                  <TableHead key={header.id} className='px-4 text-sm'>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -52,16 +52,16 @@ export function DataTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody className="">
+        <TableBody className=''>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
-                className="px-4 h-18"
+                className='px-4 h-18'
                 key={row.id}
-                data-state={row.getIsSelected() && "selected"}
+                data-state={row.getIsSelected() && 'selected'}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-4">
+                  <TableCell key={cell.id} className='px-4'>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -69,7 +69,7 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell colSpan={columns.length} className='h-24 text-center'>
                 No results.
               </TableCell>
             </TableRow>

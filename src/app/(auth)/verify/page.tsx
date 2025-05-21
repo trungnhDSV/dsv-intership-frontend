@@ -23,7 +23,6 @@ export default function VerifyPage() {
     hasRunRef.current = true;
 
     const verifyEmail = async () => {
-      console.log('RUNNING VERIFY EMAIL');
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/verify`,
@@ -39,7 +38,6 @@ export default function VerifyPage() {
         setStatus('success');
 
         const data = await res.json();
-        console.log('Verify email data:', data);
 
         const verifiedToken = data.data.token;
         const login = await signIn('magic-link', {
@@ -65,10 +63,10 @@ export default function VerifyPage() {
   }
 
   return (
-    <div className="flex w-screen h-screen">
+    <div className='flex w-screen h-screen'>
       <VerifyNav />
       <div
-        className="flex flex-1 item-center justify-center"
+        className='flex flex-1 item-center justify-center'
         style={{ marginTop: `${NavbarHeight}px` }}
       >
         {status === 'pending' && <Loading />}
@@ -89,17 +87,17 @@ const Loading = () => {
 
 const VerifySuccess = () => {
   return (
-    <div className="flex items-center justify-center flex-col gap-6 w-fit">
+    <div className='flex items-center justify-center flex-col gap-6 w-fit'>
       <Image
         src={'/verify-success.png'}
         width={1000}
         height={1000}
-        alt="logo"
-        className="w-[192px] h-[192px]"
+        alt='logo'
+        className='w-[192px] h-[192px]'
       />
-      <p className="font-bold text-[32px]">Well done!!</p>
+      <p className='font-bold text-[32px]'>Well done!!</p>
       <p>You have verifies your email successfully</p>
-      <Button className="bg-[#F5C731] w-full">Go To My Document</Button>
+      <Button className='bg-[#F5C731] w-full'>Go To My Document</Button>
     </div>
   );
 };

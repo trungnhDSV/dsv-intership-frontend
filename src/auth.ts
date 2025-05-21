@@ -1,5 +1,3 @@
-console.log('🔥 INIT AUTH CONFIG');
-
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
@@ -35,7 +33,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        console.log('Email/Password ', credentials);
         try {
           const res = await fetch(`${API_URL}/auth/signin`, {
             method: 'POST',
@@ -59,10 +56,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             throw new Error(data.message || 'Invalid credentials');
           }
 
-          console.log('data', data);
-
           if (data?.data?.token) {
-            console.log('VALID TOKEN', data.data.token);
             return {
               id: data.data.user.id,
               email: data.data.user.email,
@@ -85,7 +79,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         try {
-          console.log('Magic link ', credentials);
           const res = await fetch(`${API_URL}/auth/verify-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -128,7 +121,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return true;
         } catch (error) {
           console.error('OAuth check failed:', error);
-          return `/sign-in?error=email-exists`;
+          return '/sign-in?error=email-exists';
         }
       }
       return true;
@@ -142,9 +135,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       user: { id: string; email: string; name: string; token: string };
       account: unknown;
     }) {
-      console.log('JWT CALLBACK', token, user, account);
       if (account && user) {
-        console.log('SUCCESSFUL LOGIN');
         if (account.provider === 'google') {
           token.accessToken = account.access_token;
         } else token.accessToken = user.token;
@@ -154,14 +145,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
         };
       }
-      console.log('JWT token', token);
       return token;
     },
     async session({ session, token }) {
-      console.log('SESSION CALLBACK', session, token);
       session.accessToken = token.accessToken;
       session.user = token.user;
-      console.log('SESSION', session);
 
       return session;
     },

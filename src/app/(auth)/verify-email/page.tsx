@@ -9,10 +9,8 @@ import React, { useEffect, useState } from 'react';
 const VerifyPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
-  console.log(localStorage.getItem('pendingEmail'));
   useEffect(() => {
     const savedEmail = localStorage.getItem('pendingEmail');
-    console.log('savedEmail', savedEmail);
     if (savedEmail) setEmail(savedEmail);
   }, [router]);
 
@@ -50,7 +48,6 @@ const SendVerificationEmail = ({ email }: { email: string }) => {
       }
 
       const data = await res.json();
-      console.log(data);
     } catch (error) {
       console.error('Error resending verification email:', error);
     }

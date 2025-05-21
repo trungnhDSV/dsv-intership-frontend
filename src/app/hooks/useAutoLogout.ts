@@ -6,9 +6,7 @@ export function useAutoLogout(inactivityTime = 30 * 60 * 1000) {
   const timer = useRef<NodeJS.Timeout>(null);
 
   useEffect(() => {
-    console.log('useAutoLogout', session);
     if (!session?.accessToken) return;
-    console.log('Session exists, setting up auto logout');
 
     const resetTimer = () => {
       if (timer.current) clearTimeout(timer.current);

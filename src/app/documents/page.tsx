@@ -79,11 +79,7 @@ const DocsPage = () => {
 
   const router = useRouter();
   useEffect(() => {
-    console.log('status in DocsPage', status);
-    console.log('session in DocsPage', session);
-
     if (status === 'unauthenticated') {
-      console.log('NAVIGATE FROM DOCUMENTS TO SIGNIN');
       router.push('/sign-in');
     }
   }, [status, router]);

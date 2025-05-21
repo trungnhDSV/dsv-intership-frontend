@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { ColumnDef } from "@tanstack/react-table";
-import { ArrowUpDown } from "lucide-react";
+import { ColumnDef } from '@tanstack/react-table';
+import { ArrowUpDown } from 'lucide-react';
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -16,25 +16,25 @@ export type AppDocument = {
 
 export const columns: ColumnDef<AppDocument>[] = [
   {
-    accessorKey: "fileName",
-    header: "File name",
+    accessorKey: 'fileName',
+    header: 'File name',
   },
   {
-    accessorKey: "owner",
-    header: "Document owner",
+    accessorKey: 'owner',
+    header: 'Document owner',
   },
   {
-    accessorKey: "updatedDate",
+    accessorKey: 'updatedDate',
 
     header: ({ column }) => {
       return (
-        <div className="flex">
+        <div className='flex'>
           Last updated
           <button
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="cursor-pointer"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className='cursor-pointer'
           >
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className='ml-2 h-4 w-4' />
           </button>
         </div>
       );
@@ -42,13 +42,13 @@ export const columns: ColumnDef<AppDocument>[] = [
     cell: ({ row }) => {
       const date = new Date(row.original.updatedDate);
       return (
-        <span className="text-sm text-gray-500">
-          {date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
+        <span className='text-sm text-gray-500'>
+          {date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
           })}
         </span>
       );

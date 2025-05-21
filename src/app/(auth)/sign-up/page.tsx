@@ -7,8 +7,6 @@ const SignUpPage = () => {
   const { data: session, status } = useSession();
   useEffect(() => {
     if (status === 'authenticated') {
-      console.log('Session found, redirecting to documents');
-      console.log('Session:', session);
       window.location.href = '/documents';
     }
   }, [session, status]);
