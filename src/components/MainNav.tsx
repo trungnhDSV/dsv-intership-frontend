@@ -1,60 +1,60 @@
-"use client";
-import SignOutBtn from "@/components/SignOutBtn";
-import { NavbarHeight } from "@/constants/UI";
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
+'use client';
+import SignOutBtn from '@/components/SignOutBtn';
+import { NavbarHeight } from '@/constants/UI';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { useSession } from "next-auth/react";
-import Image from "next/image";
-import Link from "next/link";
-import React, { useState } from "react";
+} from '@radix-ui/react-dropdown-menu';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import React, { useState } from 'react';
 
 const MainNav = () => {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
-  if (status === "loading" || !session) return null;
+  if (status === 'loading' || !session) return null;
   return (
     <nav
-      className="w-full bg-white shadow-md flex items-center fixed z-100"
+      className='w-full bg-white shadow-md flex items-center fixed z-100'
       style={{ height: `${NavbarHeight}px` }}
     >
-      <Link href={"/documents"}>
+      <Link href={'/documents'}>
         <Image
-          src={"/logo.png"}
+          src={'/logo.png'}
           width={100}
           height={100}
-          alt="logo"
-          className="w-8 h-8 ml-6"
+          alt='logo'
+          className='w-8 h-8 ml-6'
         />
       </Link>
-      <div className="flex flex-1 justify-end pr-6 items-center gap-4">
-        <p className="text-[14px]">Good Morning, {session.user?.name}</p>
+      <div className='flex flex-1 justify-end pr-6 items-center gap-4'>
+        <p className='text-[14px]'>Good Morning, {session.user?.name}</p>
         <div
           className={cn(
-            "ring-1 ring-[#E3E8EF] rounded-full p-[4px] w-10 h-10 transition-all duration-200 ease-in-out",
-            isOpen && "ring-[#F2385A]"
+            'ring-1 ring-[#E3E8EF] rounded-full p-[4px] w-10 h-10 transition-all duration-200 ease-in-out',
+            isOpen && 'ring-[#F2385A]'
           )}
         >
           <DropdownMenu
-            dir="ltr"
+            dir='ltr'
             open={isOpen}
             onOpenChange={() => setIsOpen(!isOpen)}
           >
             <DropdownMenuTrigger asChild>
-              <Avatar className="w-full h-full rounded-full bg-[#F5C731] flex items-center justify-center">
-                <AvatarFallback className="text-xs font-medium text-gray-900">
-                  {session.user?.name?.split(" ").map((n) => n[0])}
+              <Avatar className='w-full h-full rounded-full bg-[#F5C731] flex items-center justify-center'>
+                <AvatarFallback className='text-xs font-medium text-gray-900'>
+                  {session.user?.name?.split(' ').map((n) => n[0])}
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9]">
-              <DropdownMenuItem className="px-4 py-3">
-                <div className="w-[137px] text-[16px]">
+            <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9]'>
+              <DropdownMenuItem className='px-4 py-3'>
+                <div className='w-[137px] text-[16px]'>
                   <SignOutBtn />
                 </div>
               </DropdownMenuItem>

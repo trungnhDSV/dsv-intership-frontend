@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useEffect, useRef } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 
 export function useAutoLogout(inactivityTime = 30 * 60 * 1000) {
   const { data: session } = useSession();
@@ -7,17 +7,17 @@ export function useAutoLogout(inactivityTime = 30 * 60 * 1000) {
 
   useEffect(() => {
     if (!session?.accessToken) return;
-    console.log("Session exists, setting up auto logout");
+    console.log('Session exists, setting up auto logout');
 
     const resetTimer = () => {
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(() => {
-        console.warn("⏱️ No activity for 30 mins, logging out");
-        signOut({ callbackUrl: "/sign-in" });
+        console.warn('⏱️ No activity for 30 mins, logging out');
+        signOut({ callbackUrl: '/sign-in' });
       }, inactivityTime);
     };
 
-    const events = ["mousemove", "keydown", "click", "scroll"];
+    const events = ['mousemove', 'keydown', 'click', 'scroll'];
 
     events.forEach((event) => window.addEventListener(event, resetTimer));
 

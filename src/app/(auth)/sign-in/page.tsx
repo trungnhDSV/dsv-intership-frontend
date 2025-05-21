@@ -9,8 +9,6 @@ const SignInPage = () => {
   const router = useRouter();
   useEffect(() => {
     if (status === 'authenticated') {
-      console.log('Session found, redirecting to documents');
-      console.log('Session:', session);
       router.push('/documents');
     }
   }, [session, status, router]);

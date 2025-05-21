@@ -34,27 +34,27 @@ const SignInForm = () => {
     checkSession();
   }, [state?.success, router]);
   return (
-    <div className="bg-white rounded-xl p-12 flex flex-col gap-10">
-      <div className="flex justify-center">
-        <h1 className="text-5xl font-bold tracking-tight">Sign In</h1>
+    <div className='bg-white rounded-xl p-12 flex flex-col gap-10'>
+      <div className='flex justify-center'>
+        <h1 className='text-5xl font-bold tracking-tight'>Sign In</h1>
         <Image
           src={'/logo.png'}
           width={100}
           height={100}
-          alt="logo"
-          className="w-8 h-8"
+          alt='logo'
+          className='w-8 h-8'
         />
       </div>
-      <div className="flex flex-col gap-10">
+      <div className='flex flex-col gap-10'>
         <GoogleSignIn />
-        <div className="flex gap-[24px] flex-col">
-          <div className="flex items-center gap-1">
-            <hr className="flex-1" />
-            <p className="text-sm">or</p>
-            <hr className="flex-1" />
+        <div className='flex gap-[24px] flex-col'>
+          <div className='flex items-center gap-1'>
+            <hr className='flex-1' />
+            <p className='text-sm'>or</p>
+            <hr className='flex-1' />
           </div>
           {error === 'email-exists' && (
-            <div className=" bg-[#FEE9E7] mt-1 px-3 py-4 rounded-md text-xs border-l-[#900B09] border-l-2 w-[360px]">
+            <div className=' bg-[#FEE9E7] mt-1 px-3 py-4 rounded-md text-xs border-l-[#900B09] border-l-2 w-[360px]'>
               This email address is currently being used with email & password.
               Please sign in with email & password
             </div>
@@ -62,61 +62,61 @@ const SignInForm = () => {
           <form
             ref={formRef}
             action={formAction}
-            className="flex flex-col gap-4"
+            className='flex flex-col gap-4'
           >
             <div>
-              <p className="mb-1">
-                Email <span className="text-[#EC221F]">*</span>
+              <p className='mb-1'>
+                Email <span className='text-[#EC221F]'>*</span>
               </p>
               <Input
-                name="email"
-                id="email"
+                name='email'
+                id='email'
                 defaultValue={state?.values?.email}
-                placeholder="Input email address"
-                type="email"
-                autoComplete="email"
+                placeholder='Input email address'
+                type='email'
+                autoComplete='email'
                 className={state?.errors?.email ? 'border-red-800' : ''}
               />
               {state?.errors?.email &&
                 state.errors?.email[0] !== 'Invalid email or password' && (
-                  <p className="text-sm text-[#900B09] mt-1">
+                  <p className='text-sm text-[#900B09] mt-1'>
                     {state.errors.email[0]}
                   </p>
                 )}
             </div>
             <div>
-              <p className="mb-1">
-                Password <span className="text-[#EC221F]">*</span>
+              <p className='mb-1'>
+                Password <span className='text-[#EC221F]'>*</span>
               </p>
               <Input
-                name="password"
-                id="password"
+                name='password'
+                id='password'
                 defaultValue={state?.values?.password}
-                placeholder="Input password"
-                type="password"
-                autoComplete="current-password"
+                placeholder='Input password'
+                type='password'
+                autoComplete='current-password'
                 className={state?.errors?.password ? 'border-red-800' : ''}
               />
               {state?.errors?.password && (
-                <p className="text-sm text-[#900B09] mt-1">
+                <p className='text-sm text-[#900B09] mt-1'>
                   {state.errors.password[0]}
                 </p>
               )}
             </div>
             <Button
               variant={'primary'}
-              type="submit"
-              className="w-[360px] mt-2"
+              type='submit'
+              className='w-[360px] mt-2'
             >
               Sign In
             </Button>
           </form>
         </div>
-        <div className="text-center">
+        <div className='text-center'>
           <p>
             Do not have an account?{' '}
-            <Link href="/sign-up">
-              <span className="text-primary font-bold hover:underline">
+            <Link href='/sign-up'>
+              <span className='text-primary font-bold hover:underline'>
                 Sign up
               </span>
             </Link>

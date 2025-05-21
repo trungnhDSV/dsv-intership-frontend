@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 
 import {
   Table,
@@ -14,9 +14,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -34,10 +34,10 @@ export function DataTable<TData, TValue>({
   });
   const router = useRouter();
   return (
-    <div className="w-full h-full flex flex-col">
-      <div className="rounded-md border flex flex-col overflow-hidden">
+    <div className='w-full h-full flex flex-col'>
+      <div className='rounded-md border flex flex-col overflow-hidden'>
         <Table>
-          <TableHeader className="bg-[#F5F5F5] h-10 sticky top-0 z-10 shadow-sm">
+          <TableHeader className='bg-[#F5F5F5] h-10 sticky top-0 z-10 shadow-sm'>
             {table.getHeaderGroups().map((headerGroup) => {
               return (
                 <TableRow key={headerGroup.id}>
@@ -46,10 +46,10 @@ export function DataTable<TData, TValue>({
                       <TableHead
                         key={header.id}
                         className={cn(
-                          "px-4",
-                          header.id === "name" && "w-full",
-                          header.id === "ownerName" && "min-w-[280px]",
-                          header.id === "uploadAt" && "w-fit"
+                          'px-4',
+                          header.id === 'name' && 'w-full',
+                          header.id === 'ownerName' && 'min-w-[280px]',
+                          header.id === 'uploadAt' && 'w-fit'
                         )}
                       >
                         {header.isPlaceholder
@@ -65,15 +65,14 @@ export function DataTable<TData, TValue>({
               );
             })}
           </TableHeader>
-          <TableBody className="">
+          <TableBody className=''>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => {
-                console.log(row);
                 return (
                   <TableRow
-                    className="px-4 h-18"
+                    className='px-4 h-18'
                     key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
+                    data-state={row.getIsSelected() && 'selected'}
                     onClick={() => {
                       router.push(
                         `/documents/${(row.original as { id: string }).id}`
@@ -81,7 +80,7 @@ export function DataTable<TData, TValue>({
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="px-4 font-medium">
+                      <TableCell key={cell.id} className='px-4 font-medium'>
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -95,7 +94,7 @@ export function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className='h-24 text-center'
                 >
                   No results.
                 </TableCell>

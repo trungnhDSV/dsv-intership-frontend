@@ -1,8 +1,8 @@
-import { auth } from "@/auth";
-import MainNav from "@/components/MainNav";
-import { NavbarHeight } from "@/constants/UI";
-import { redirect } from "next/navigation";
-import React from "react";
+import { auth } from '@/auth';
+import MainNav from '@/components/MainNav';
+import { NavbarHeight } from '@/constants/UI';
+import { redirect } from 'next/navigation';
+import React from 'react';
 
 const layout = async ({
   children,
@@ -10,12 +10,7 @@ const layout = async ({
   children: React.ReactNode;
 }>) => {
   const session = await auth();
-  if (!session) {
-    console.log("Session not found, redirecting to sign-in");
-    redirect("/sign-in");
-  } else {
-    console.log("Session found", session);
-  }
+  if (!session) redirect('/sign-in');
 
   return (
     <div>
