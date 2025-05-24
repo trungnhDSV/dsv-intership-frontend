@@ -20,7 +20,7 @@ export const ZoomControls = ({
   setZoom,
 }: {
   zoom: number;
-  setZoom: React.Dispatch<React.SetStateAction<number>>;
+  setZoom: (zoom: number) => void;
 }) => {
   const [isEditingZoom, setIsEditingZoom] = useState(false);
   const [zoomInput, setZoomInput] = useState(String(Math.round(zoom * 100)));
@@ -53,11 +53,13 @@ export const ZoomControls = ({
 
   // Zoom functions with center preservation
   const zoomIn = () => {
-    setZoom((prev) => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+    const newZoom = Math.min(zoom + ZOOM_STEP, MAX_ZOOM);
+    setZoom(newZoom);
   };
 
   const zoomOut = () => {
-    setZoom((prev: number) => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+    const newZoom = Math.max(zoom - ZOOM_STEP, MIN_ZOOM);
+    setZoom(newZoom);
   };
 
   return (

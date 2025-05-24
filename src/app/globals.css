@@ -168,3 +168,20 @@
   border: 1px solid #14ae5c !important;
   background-color: #ebffee !important;
 }
+
+div[data-element='pageNav-floating-header'] {
+  display: none !important;
+}
+
+div.FloatSection.center__bottom {
+  display: none !important;
+}
+
+.FloatingHeader {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+.bottom-headers-wrapper {
+  display: none !important;
+}
