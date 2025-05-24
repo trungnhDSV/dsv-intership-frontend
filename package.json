@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "copy-webviewer": "powershell -Command \"New-Item -ItemType Directory -Force -Path ./public/lib/webviewer; Copy-Item -Recurse -Force ./node_modules/@pdftron/webviewer/public/* ./public/lib/webviewer/\""
   },
   "dependencies": {
+    "@pdftron/webviewer": "^11.4.0",
     "@radix-ui/react-avatar": "^1.1.9",
     "@radix-ui/react-checkbox": "^1.3.1",
     "@radix-ui/react-dialog": "^1.1.13",

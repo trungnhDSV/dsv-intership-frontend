@@ -39,6 +39,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   // Xử lý upload
   const handleUpload = async (file: File) => {
     setSelectedFile(file);
+    console.log('Selected file:', file);
 
     if (!file || !session?.user?.id) {
       console.error('No file selected or user ID not found');
@@ -51,7 +52,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
       });
       return;
     }
-
+    console.log('CHECK PASS', await checkPdfPassword(file));
     const hasPassword = await checkPdfPassword(file);
     if (hasPassword) {
       showErrorToast({
@@ -100,6 +101,10 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
           title: 'Uploaded successfully',
         });
 
+        setIsDialogOpen(false);
+        setSelectedFile(null);
+
+        // Step 3: Save metadata to backend
         const metaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -114,8 +119,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
         const result: {
           data: FileMetadata;
         } | null = await metaRes.json();
-        setIsDialogOpen(false);
-        setSelectedFile(null);
+
         if (fileInputRef.current) fileInputRef.current.value = ''; // Reset input
         if (onUploadSuccess && result?.data) {
           onUploadSuccess(result?.data);
@@ -133,8 +137,6 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     xhr.open('PUT', url, true);
     xhr.setRequestHeader('Content-Type', file.type);
     xhr.send(file);
-
-    // Step 3: Save metadata to backend
   };
 
   return (

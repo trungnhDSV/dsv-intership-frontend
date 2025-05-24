@@ -172,10 +172,12 @@ const DocsPage = () => {
   } = useDocuments(session?.user?.id);
 
   const handleNewDocument = useCallback((newDoc: FileMetadata) => {
-    updateDocuments((prev) => ({
-      ...prev,
-      documents: [newDoc, ...prev],
-    }));
+    updateDocuments((prev) => {
+      console.log('Adding new document:', newDoc);
+      console.log('Previous documents:', prev);
+      console.log('Updated documents:', [newDoc, ...prev]);
+      return [newDoc, ...prev];
+    });
   }, []);
 
   useEffect(() => {
