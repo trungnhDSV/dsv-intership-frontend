@@ -1,45 +1,19 @@
 'use client';
-
 import PaginantionControl from '@/components/pdf-viewer/PaginantionControl';
 import { ZoomControls } from '@/components/pdf-viewer/ZoomControl';
-import { cn } from '@/lib/utils';
-import { WebViewerInstance } from '@pdftron/webviewer';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
-import { Ban, ChevronDown, RectangleHorizontal, Type } from 'lucide-react';
+import { Core, WebViewerInstance } from '@pdftron/webviewer';
+import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
+import TextAnnotControl from './TextAnnotControl';
+import ShapeAnnotControl from './ShapeAnnotControl';
+import { cn } from '@/lib/utils';
+import { useTextAnnotationState } from '@/app/hooks/useAnnotText';
+import { useShapeAnnotationState } from '@/app/hooks/useAnnotShape';
+import { ShapeType } from '@/types/types';
 
 interface WebViewerProps {
   initialDoc: string;
 }
-
-const FONT_FAMILY_OPTIONS = [
-  { label: 'Inter', value: 'Inter' },
-  { label: 'Arial', value: 'Arial' },
-  { label: 'Times New Roman', value: 'Times New Roman' },
-];
-const FONT_SIZE_OPTIONS = [
-  { label: '8pt', value: 8 },
-  { label: '10pt', value: 10 },
-  { label: '12pt', value: 12 },
-  { label: '14pt', value: 14 },
-  { label: '16pt', value: 16 },
-  { label: '18pt', value: 18 },
-  { label: '20pt', value: 20 },
-];
-const COLOR_OPTIONS = [
-  { label: 'Red', value: '#FF0000' },
-  { label: 'Green', value: '#00FF00' },
-  { label: 'Blue', value: '#0000FF' },
-  { label: 'Black', value: '#000000' },
-  { label: 'White', value: '#FFFFFF' },
-];
 
 export default function WebViewer({ initialDoc }: WebViewerProps) {
   const viewer = useRef<HTMLDivElement>(null);
@@ -51,7 +25,42 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
   const [isEditingPage, setIsEditingPage] = useState<boolean>(false);
   const [pageInput, setPageInput] = useState<string>('1');
   const [zoom, setZoom] = useState(1);
-  const [RadioGroupValue, setRadioGroupValue] = React.useState('fill');
+
+  // ANNOTATION
+  const [selectedAnnotation, setSelectedAnnotation] = useState<'shape' | 'text' | null>(null);
+  const {
+    textState,
+    textOpacityInput,
+    textStrokeWidthInput,
+    setTextInputOnSubmit,
+    setTextInputIsEdit,
+    setTextInputChange,
+    setFontFamily,
+    setFontSize,
+    setTextColor,
+    setTextStrokeColor,
+    setTextStrokeWidth,
+    setTextOpacity,
+    setTextRadioGroup,
+    // setText,
+    // resetText,
+  } = useTextAnnotationState();
+
+  const {
+    shapeState,
+    shapeOpacityInput,
+    shapeStrokeWidthInput,
+    setShapeInputOnSubmit,
+    setShapeInputIsEdit,
+    setShapeInputChange,
+    setShapeType,
+    setShapeStrokeColor,
+    setShapeStrokeWidth,
+    setShapeFillColor,
+    setShapeOpacity,
+    setShapeRadioGroup,
+    // resetShape,
+  } = useShapeAnnotationState();
 
   useEffect(() => {
     let webViewerInstance: WebViewerInstance;
@@ -79,6 +88,8 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
               'annotationPopup', // Ẩn popup chú thích
               'pageControls',
               'page-nav-floating-header', // pagination controls
+              'contextMenuPopup', // Ẩn menu ngữ cảnh
+              'textPopup', // Ẩn popup văn bản
             ],
           },
           viewer.current
@@ -108,17 +119,9 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
 
           // init for zoom feature
           const zoom = docViewer.getZoomLevel();
-          console.log('Initial zoom level:', zoom);
           setZoom(zoom);
         });
         documentViewer.addEventListener('zoomUpdated', (zoomLevel) => {
-          //   if (zoomLevel < 0.5) {
-          //     zoomLevel = 0.5;
-          //   } else if (zoomLevel > 2.5) {
-          //     zoomLevel = 2.5;
-          //   }
-          //   webViewerInstance.Core.documentViewer.zoomTo(zoomLevel);
-          console.log('Zoom level changed:', zoomLevel);
           setZoom(zoomLevel);
         });
 
@@ -133,12 +136,262 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     initializeWebViewer();
   }, [viewer, initialDoc]);
 
+  // Register custom annotation tools
+  useEffect(() => {
+    const init = async () => {
+      const { registerTriangleAnnotation } = await import('@/lib/annotations/TriangleTool');
+      if (instanceRef.current) {
+        registerTriangleAnnotation(instanceRef.current);
+      }
+    };
+    if (isViewerReady) {
+      init();
+    }
+  }, [isViewerReady]);
+
   const handleSetZoom = (newZoom: number) => {
     if (instanceRef.current) {
       instanceRef.current.Core.documentViewer.zoomTo(newZoom);
       setZoom(newZoom);
     }
   };
+  function getToolNameFromShapeType(shapeType: ShapeType) {
+    switch (shapeType) {
+      case 'rectangle':
+        return 'AnnotationCreateRectangle';
+      case 'ellipse':
+        return 'AnnotationCreateEllipse';
+      case 'line':
+        return 'AnnotationCreateLine';
+      case 'arrow':
+        return 'AnnotationCreateArrow';
+      case 'triangle':
+        return 'AnnotationCreateTriangle';
+      default:
+        return 'AnnotationCreateRectangle';
+    }
+  }
+
+  // Update tool mode when selected annotation changes
+  useEffect(() => {
+    if (instanceRef.current) {
+      if (selectedAnnotation === 'shape') {
+        const toolName = getToolNameFromShapeType(shapeState.shapeType);
+        instanceRef.current.UI.setToolMode(toolName);
+        // Core.annotationDefaults
+      } else if (selectedAnnotation === 'text') {
+        console.log('TEXT ANNOTATION SELECTED');
+        instanceRef.current.UI.setToolMode('AnnotationCreateFreeText');
+      } else {
+        // instanceRef.current.UI.setToolMode('Pan');
+        instanceRef.current.UI.setToolMode('AnnotationEdit');
+      }
+    }
+  }, [instanceRef, selectedAnnotation, shapeState.shapeType]);
+
+  // Handle annotation added event for shape annotations
+  useEffect(() => {
+    if (!instanceRef.current || !isViewerReady || selectedAnnotation !== 'shape') return;
+
+    const { Core } = instanceRef.current;
+    const toolName = getToolNameFromShapeType(shapeState.shapeType);
+    const tool = Core.documentViewer.getTool(toolName);
+
+    console.log('Current tool:', tool);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const onAnnotAdded = (annot: typeof Core.Annotations.Annotation | any) => {
+      const { Annotations } = Core;
+
+      const isBuiltInShape =
+        annot instanceof Annotations.RectangleAnnotation ||
+        annot instanceof Annotations.EllipseAnnotation ||
+        annot instanceof Annotations.LineAnnotation;
+
+      const isTriangleShape = annot.Subject === 'Triangle' && annot.elementName === 'triangle';
+
+      if (isBuiltInShape || isTriangleShape) {
+        console.log('Shape annotation added:', annot);
+        // Stroke
+        if (shapeState.strokeColor) {
+          annot.StrokeColor = new Annotations.Color(
+            shapeState.strokeColor.r,
+            shapeState.strokeColor.g,
+            shapeState.strokeColor.b
+          );
+        }
+
+        // Fill
+        if ('FillColor' in annot && shapeState.fillColor) {
+          annot.FillColor = new Annotations.Color(
+            shapeState.fillColor.r,
+            shapeState.fillColor.g,
+            shapeState.fillColor.b
+          );
+        } else if ('FillColor' in annot) {
+          annot.FillColor = new Annotations.Color(255, 255, 255, 0);
+        }
+
+        // Opacity, thickness
+        annot.StrokeThickness = shapeState.strokeWidth;
+        annot.Opacity = shapeState.opacity;
+
+        Core.documentViewer.getAnnotationManager().redrawAnnotation(annot);
+      }
+    };
+
+    tool.addEventListener('annotationAdded', onAnnotAdded);
+
+    return () => {
+      tool.removeEventListener('annotationAdded', onAnnotAdded);
+    };
+  }, [shapeState, selectedAnnotation, isViewerReady, instanceRef.current]);
+
+  // Handle annotation added event for text annotations
+  useEffect(() => {
+    if (!instanceRef.current || !isViewerReady || selectedAnnotation !== 'text') return;
+
+    const { Core } = instanceRef.current;
+    const tool = Core.documentViewer.getTool('AnnotationCreateFreeText');
+
+    const onAnnotAdded = (annot: Core.Annotations.Annotation) => {
+      const { Annotations } = Core;
+      console.log('Text annotation added:', annot, annot instanceof Annotations.FreeTextAnnotation);
+
+      if (annot instanceof Annotations.FreeTextAnnotation) {
+        // Padding
+        // annot.setPadding(new Core.Math.Rect(4, 4, 4, 4));
+
+        // Font settings
+        annot.FontSize = textState.fontSize.toString();
+
+        // annot.setFont(textState.fontFamily);
+
+        // Text color
+        if (textState.textColor) {
+          annot.TextColor = new Annotations.Color(
+            textState.textColor.r,
+            textState.textColor.g,
+            textState.textColor.b
+          );
+        }
+
+        // Stroke
+        annot.StrokeThickness = textState.strokeWidth;
+        if (textState.strokeColor) {
+          annot.StrokeColor = new Annotations.Color(
+            textState.strokeColor.r,
+            textState.strokeColor.g,
+            textState.strokeColor.b
+          );
+        }
+
+        // Opacity
+        annot.Opacity = textState.opacity;
+
+        // Redraw
+        Core.documentViewer.getAnnotationManager().redrawAnnotation(annot);
+      }
+    };
+
+    tool.addEventListener('annotationAdded', onAnnotAdded);
+
+    return () => {
+      tool.removeEventListener('annotationAdded', onAnnotAdded);
+    };
+  }, [textState, selectedAnnotation, isViewerReady]);
+
+  useEffect(() => {
+    if (!instanceRef.current || !isViewerReady) return;
+
+    const { Core } = instanceRef.current;
+    const annotManager = Core.documentViewer.getAnnotationManager();
+
+    const handleAnnotAdded = (annotations: Core.Annotations.Annotation[], action: string) => {
+      if (action !== 'add') return;
+
+      annotations.forEach((annot) => {
+        if (annot instanceof Core.Annotations.FreeTextAnnotation && selectedAnnotation === 'text') {
+          annot.Font = textState.fontFamily;
+          annot.FontSize = textState.fontSize.toString();
+          if (textState.textColor) {
+            annot.TextColor = new Core.Annotations.Color(
+              textState.textColor.r,
+              textState.textColor.g,
+              textState.textColor.b
+            );
+          }
+          annot.StrokeThickness = textState.strokeWidth;
+          if (textState.strokeColor) {
+            annot.StrokeColor = new Core.Annotations.Color(
+              textState.strokeColor.r,
+              textState.strokeColor.g,
+              textState.strokeColor.b
+            );
+          }
+          annot.Opacity = textState.opacity;
+        }
+
+        // if (selectedAnnotation === 'shape') {
+        //   annot.StrokeThickness = shapeState.strokeWidth;
+        //   annot.StrokeColor = new Core.Annotations.Color(
+        //     shapeState.strokeColor.r,
+        //     shapeState.strokeColor.g,
+        //     shapeState.strokeColor.b
+        //   );
+        //   if ('FillColor' in annot && shapeState.fillColor) {
+        //     annot.FillColor = new Core.Annotations.Color(
+        //       shapeState.fillColor.r,
+        //       shapeState.fillColor.g,
+        //       shapeState.fillColor.b
+        //     );
+        //   }
+        //   annot.Opacity = shapeState.opacity;
+        // }
+
+        annotManager.redrawAnnotation(annot);
+      });
+    };
+
+    annotManager.addEventListener('annotationChanged', handleAnnotAdded);
+
+    return () => {
+      annotManager.removeEventListener('annotationChanged', handleAnnotAdded);
+    };
+  }, [selectedAnnotation, textState, shapeState, isViewerReady]);
+
+  useEffect(() => {
+    if (!instanceRef.current || !isViewerReady || selectedAnnotation !== 'text') return;
+
+    const { Core } = instanceRef.current;
+    const annotManager = Core.documentViewer.getAnnotationManager();
+    const { Annotations } = Core;
+
+    const handleFreeTextStyle = (annots: Core.Annotations.Annotation[], action: string) => {
+      if (action !== 'add') return;
+
+      annots.forEach((annot) => {
+        if (annot instanceof Annotations.FreeTextAnnotation) {
+          // Chờ textarea mount rồi chỉnh style trực tiếp
+          setTimeout(() => {
+            const textarea = document.querySelector(
+              'textarea.freeTextTextarea'
+            ) as HTMLTextAreaElement;
+            if (textarea) {
+              textarea.style.fontSize = `${textState.fontSize}px`;
+              textarea.style.fontFamily = textState.fontFamily;
+              textarea.style.color = `rgb(${textState.textColor.r}, ${textState.textColor.g}, ${textState.textColor.b})`;
+            }
+          }, 0);
+        }
+      });
+    };
+
+    annotManager.addEventListener('annotationChanged', handleFreeTextStyle);
+
+    return () => {
+      annotManager.removeEventListener('annotationChanged', handleFreeTextStyle);
+    };
+  }, [instanceRef, isViewerReady, selectedAnnotation, textState]);
 
   return (
     <div className='flex-1 flex flex-col rounded-2xl overflow-hidden border-[1px] border-[#D9D9D9]'>
@@ -165,154 +418,76 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
       </div>
 
       {/* Annotation Control */}
-      <div className='absolute bottom-0 right-0  z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
+      <div className='absolute bottom-[92px] right-[49px] z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
+        {/* SHAPE ANNOTATION */}
         <div className='flex'>
-          <div className='flex gap-1 items-center text-sm h-[30px] bg-[#D9D9D9] rounded-sm p-1'>
-            <RectangleHorizontal className='w-5 h-5' />
+          <button
+            className={cn(
+              'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+              selectedAnnotation === 'shape' && 'bg-[#D9D9D9]'
+            )}
+            onClick={() => {
+              if (selectedAnnotation === 'shape') {
+                setSelectedAnnotation(null);
+              } else {
+                setSelectedAnnotation('shape');
+              }
+            }}
+          >
+            <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
             <span>Shape</span>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <ChevronDown className='w-5 h-5' />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Billing</DropdownMenuItem>
-              <DropdownMenuItem>Team</DropdownMenuItem>
-              <DropdownMenuItem>Subscription</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          </button>
+          <ShapeAnnotControl
+            shapeState={shapeState}
+            shapeOpacityInput={shapeOpacityInput}
+            shapeStrokeWidthInput={shapeStrokeWidthInput}
+            setShapeInputOnSubmit={setShapeInputOnSubmit}
+            setShapeInputIsEdit={setShapeInputIsEdit}
+            setShapeInputChange={setShapeInputChange}
+            setShapeType={setShapeType}
+            setShapeStrokeColor={setShapeStrokeColor}
+            setShapeStrokeWidth={setShapeStrokeWidth}
+            setShapeFillColor={setShapeFillColor}
+            setShapeOpacity={setShapeOpacity}
+            setShapeRadioGroup={setShapeRadioGroup}
+          />
         </div>
+
         <div className='w-[1px] h-[18px] bg-[#DBDDE1]'></div>
+
+        {/* TYPE ANNOTATION */}
         <div className='flex'>
-          <div className='flex gap-1 items-center text-sm h-[30px] bg-[#D9D9D9] rounded-sm p-1'>
-            <Type className='w-5 h-5' />
+          <button
+            className={cn(
+              'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+              selectedAnnotation === 'text' && 'bg-[#D9D9D9]'
+            )}
+            onClick={() => {
+              if (selectedAnnotation === 'text') {
+                setSelectedAnnotation(null);
+              } else {
+                setSelectedAnnotation('text');
+              }
+            }}
+          >
+            <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
             <span>Type</span>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <ChevronDown className='w-5 h-5' />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align='end'
-              className='bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg p-4'
-            >
-              <DropdownMenuItem>
-                <div className='flex flex-col gap-4'>
-                  <div className='flex flex-col gap-2'>
-                    <p>Text style</p>
-                    <div className='flex gap-2'>
-                      <div className='flex-1 p-4 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center'>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className='flex items-center bg-white w-full h-full'>
-                            <span className='flex-1'>Inter</span>
-                            <ChevronDown className='w-4 h-4' />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align='end'
-                            className='w-fit text-center p-2 mb-3 rounded-xl bg-white/80 shadow-lg border border-gray-200'
-                          >
-                            {FONT_FAMILY_OPTIONS.map((option) => (
-                              <DropdownMenuItem
-                                key={option.value}
-                                // onClick={() => handleStyleChange('fontSize', option.value)}
-                                className='px-2 py-1 rounded-md text-sm'
-                              >
-                                {option.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <div className='w-[100px] p-4 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center'>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger className='flex items-center bg-white w-full h-full'>
-                            <span className='flex-1'>12pt</span>
-                            <ChevronDown className='w-4 h-4' />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className='w-fit text-center p-2 mb-3 rounded-xl bg-white/80 shadow-lg border border-gray-200'>
-                            {FONT_SIZE_OPTIONS.map((option) => (
-                              <DropdownMenuItem
-                                key={option.value}
-                                // onClick={() => handleStyleChange('fontSize', option.value)}
-                                className='px-2 py-1 rounded-md text-sm'
-                              >
-                                {option.label}
-                              </DropdownMenuItem>
-                            ))}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-                    {/* COLOR */}
-                    <div className='flex justify-between items-center'>
-                      {COLOR_OPTIONS.map((color) => (
-                        <div
-                          key={color.value}
-                          className='w-[30px] h-[30px] rounded-full flex items-center justify-center ring-2'
-                          style={{ boxShadow: `0 0 0 2px ${color.value}` }}
-                        >
-                          <div
-                            className='w-6 h-6 rounded-full'
-                            style={{ backgroundColor: color.value }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className='flex flex-col gap-2'>
-                    <p>Frame style</p>
-                    {/* radio group */}
-                    <div className='w-full flex bg-white rounded-full'>
-                      <button
-                        className={cn(
-                          'flex-1 py-2 text-center rounded-full',
-                          RadioGroupValue === 'fill' && 'bg-[#D9D9D9]'
-                        )}
-                        onClick={() => setRadioGroupValue('fill')}
-                      >
-                        Fill
-                      </button>
-                      <button
-                        className={cn(
-                          'flex-1 py-2 text-center rounded-full',
-                          RadioGroupValue === 'stroke' && 'bg-[#D9D9D9]'
-                        )}
-                        onClick={() => setRadioGroupValue('stroke')}
-                      >
-                        Border Line
-                      </button>
-                    </div>
-
-                    {RadioGroupValue === 'stroke' && <div></div>}
-
-                    {/* COLOR */}
-                    <div className='flex justify-between items-center'>
-                      <div
-                        className='w-[30px] h-[30px] rounded-full flex items-center justify-center ring-2'
-                        key={'colorNone'}
-                      >
-                        <Ban className='w-6 h-6' />
-                      </div>
-                      {COLOR_OPTIONS.map((color) => (
-                        <div
-                          className='w-[30px] h-[30px] rounded-full flex items-center justify-center ring-2'
-                          style={{ boxShadow: `0 0 0 2px ${color.value}` }}
-                        >
-                          <div
-                            className='w-6 h-6 rounded-full'
-                            style={{ backgroundColor: color.value }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          </button>
+          <TextAnnotControl
+            textState={textState}
+            textOpacityInput={textOpacityInput}
+            textStrokeWidthInput={textStrokeWidthInput}
+            setTextInputOnSubmit={setTextInputOnSubmit}
+            setTextInputIsEdit={setTextInputIsEdit}
+            setTextInputChange={setTextInputChange}
+            setFontFamily={setFontFamily}
+            setFontSize={setFontSize}
+            setTextColor={setTextColor}
+            setTextStrokeColor={setTextStrokeColor}
+            setTextStrokeWidth={setTextStrokeWidth}
+            setTextOpacity={setTextOpacity}
+            setTextRadioGroup={setTextRadioGroup}
+          />
         </div>
       </div>
     </div>
