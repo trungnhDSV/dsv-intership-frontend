@@ -28,6 +28,7 @@ interface TextAnnotControlProps {
   setTextOpacity: ReturnType<typeof useTextAnnotationState>['setTextOpacity'];
   setTextRadioGroup: ReturnType<typeof useTextAnnotationState>['setTextRadioGroup'];
   setTextFillColor: ReturnType<typeof useTextAnnotationState>['setTextFillColor'];
+  forSpecificAnnot?: boolean; // This prop is not used in the current implementation but can be used for future enhancements
 }
 
 const TextAnnotControl = ({
@@ -45,11 +46,12 @@ const TextAnnotControl = ({
   setTextOpacity,
   setTextRadioGroup,
   setTextFillColor,
+  forSpecificAnnot = false, // This prop is not used in the current implementation but can be used for future enhancements
 }: TextAnnotControlProps) => {
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={forSpecificAnnot}>
       <DropdownMenuTrigger>
-        <ChevronDown className='w-5 h-5' />
+        {forSpecificAnnot ? <></> : <ChevronDown className='w-5 h-5' />}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'

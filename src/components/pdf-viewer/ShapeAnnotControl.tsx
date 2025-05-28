@@ -25,8 +25,8 @@ interface ShapeAnnotControlProps {
   setShapeFillColor: ReturnType<typeof useShapeAnnotationState>['setShapeFillColor'];
   setShapeOpacity: ReturnType<typeof useShapeAnnotationState>['setShapeOpacity'];
   setShapeRadioGroup: ReturnType<typeof useShapeAnnotationState>['setShapeRadioGroup'];
+  forSpecificAnnot?: boolean;
 }
-
 const ShapeAnnotControl = ({
   shapeState,
   shapeOpacityInput,
@@ -40,11 +40,12 @@ const ShapeAnnotControl = ({
   setShapeFillColor,
   setShapeOpacity,
   setShapeRadioGroup,
+  forSpecificAnnot = false,
 }: ShapeAnnotControlProps) => {
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={forSpecificAnnot}>
       <DropdownMenuTrigger>
-        <ChevronDown className='w-5 h-5' />
+        {!forSpecificAnnot ? <ChevronDown className='w-5 h-5' /> : <></>}
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
@@ -52,86 +53,88 @@ const ShapeAnnotControl = ({
       >
         <div>
           <div className='flex flex-col gap-4'>
-            <div className='flex flex-col gap-2'>
-              <p className='text-sm'>Shape</p>
-              <div className='flex gap-1'>
-                <button
-                  className={cn(
-                    'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
-                    shapeState.shapeType === 'rectangle' ? 'bg-[#F2DADE]' : 'opacity-50'
-                  )}
-                  onClick={() => setShapeType('rectangle')}
-                >
-                  <Image
-                    src='/icons/md_rectangle.svg'
-                    alt='rectangle'
-                    width={24}
-                    height={24}
-                    className='w-6 h-6'
-                  />
-                </button>
-                <button
-                  className={cn(
-                    'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
-                    shapeState.shapeType === 'ellipse' && 'bg-[#F2DADE]'
-                  )}
-                  onClick={() => setShapeType('ellipse')}
-                >
-                  <Image
-                    src='/icons/md_ellipse.svg'
-                    alt='ellipse'
-                    width={24}
-                    height={24}
-                    className='w-6 h-6'
-                  />
-                </button>
-                <button
-                  className={cn(
-                    'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
-                    shapeState.shapeType === 'triangle' && 'bg-[#F2DADE]'
-                  )}
-                  onClick={() => setShapeType('triangle')}
-                >
-                  <Image
-                    src='/icons/md_triangle.svg'
-                    alt='triangle'
-                    width={24}
-                    height={24}
-                    className='w-6 h-6'
-                  />
-                </button>
-                <button
-                  className={cn(
-                    'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
-                    shapeState.shapeType === 'line' && 'bg-[#F2DADE]'
-                  )}
-                  onClick={() => setShapeType('line')}
-                >
-                  <Image
-                    src='/icons/md_line.svg'
-                    alt='line'
-                    width={24}
-                    height={24}
-                    className='w-6 h-6'
-                  />
-                </button>
-                <button
-                  className={cn(
-                    'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
-                    shapeState.shapeType === 'arrow' && 'bg-[#F2DADE]'
-                  )}
-                  onClick={() => setShapeType('arrow')}
-                >
-                  <Image
-                    src='/icons/md_arrow.svg'
-                    alt='arrow'
-                    width={24}
-                    height={24}
-                    className='w-6 h-6'
-                  />
-                </button>
+            {!forSpecificAnnot && (
+              <div className='flex flex-col gap-2'>
+                <p className='text-sm'>Shape</p>
+                <div className='flex gap-1'>
+                  <button
+                    className={cn(
+                      'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
+                      shapeState.shapeType === 'rectangle' ? 'bg-[#F2DADE]' : 'opacity-50'
+                    )}
+                    onClick={() => setShapeType('rectangle')}
+                  >
+                    <Image
+                      src='/icons/md_rectangle.svg'
+                      alt='rectangle'
+                      width={24}
+                      height={24}
+                      className='w-6 h-6'
+                    />
+                  </button>
+                  <button
+                    className={cn(
+                      'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
+                      shapeState.shapeType === 'ellipse' && 'bg-[#F2DADE]'
+                    )}
+                    onClick={() => setShapeType('ellipse')}
+                  >
+                    <Image
+                      src='/icons/md_ellipse.svg'
+                      alt='ellipse'
+                      width={24}
+                      height={24}
+                      className='w-6 h-6'
+                    />
+                  </button>
+                  <button
+                    className={cn(
+                      'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
+                      shapeState.shapeType === 'triangle' && 'bg-[#F2DADE]'
+                    )}
+                    onClick={() => setShapeType('triangle')}
+                  >
+                    <Image
+                      src='/icons/md_triangle.svg'
+                      alt='triangle'
+                      width={24}
+                      height={24}
+                      className='w-6 h-6'
+                    />
+                  </button>
+                  <button
+                    className={cn(
+                      'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
+                      shapeState.shapeType === 'line' && 'bg-[#F2DADE]'
+                    )}
+                    onClick={() => setShapeType('line')}
+                  >
+                    <Image
+                      src='/icons/md_line.svg'
+                      alt='line'
+                      width={24}
+                      height={24}
+                      className='w-6 h-6'
+                    />
+                  </button>
+                  <button
+                    className={cn(
+                      'p-1 rounded-lg cursor-pointer hover:bg-[#F2DADE]/70',
+                      shapeState.shapeType === 'arrow' && 'bg-[#F2DADE]'
+                    )}
+                    onClick={() => setShapeType('arrow')}
+                  >
+                    <Image
+                      src='/icons/md_arrow.svg'
+                      alt='arrow'
+                      width={24}
+                      height={24}
+                      className='w-6 h-6'
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
             <div className='flex flex-col gap-4'>
               <div className='flex flex-col gap-2'>
                 <p className='text-sm'>Frame style</p>
@@ -163,8 +166,10 @@ const ShapeAnnotControl = ({
                     className={cn(
                       'w-[30px] h-[30px] p-1 rounded-full flex items-center justify-center',
                       shapeState.radioGroup === 'fill'
-                        ? !shapeState.fillColor && 'ring-1 ring-[#161C21]'
-                        : !shapeState.strokeColor && 'ring-1 ring-[#161C21]'
+                        ? (!shapeState.fillColor || shapeState.fillColor.a === 0) &&
+                            'ring-1 ring-[#161C21]'
+                        : (!shapeState.strokeColor || shapeState.strokeColor.a === 0) &&
+                            'ring-1 ring-[#161C21]'
                     )}
                     key={'colorNone'}
                     onClick={() =>

@@ -1,18 +1,8 @@
 import { RGBColor, TextAnnotationState } from '@/types/types';
 import { useState } from 'react';
 
-export function useTextAnnotationState() {
-  const [textState, setTextState] = useState<TextAnnotationState>({
-    text: '',
-    fontFamily: 'Inter',
-    fontSize: 12,
-    textColor: { r: 0, g: 0, b: 0 }, // Default stroke BLACK color as RGB object
-    strokeColor: null,
-    strokeWidth: 0,
-    fillColor: null,
-    opacity: 1,
-    radioGroup: 'fill',
-  });
+export function useTextAnnotationState(initState: TextAnnotationState) {
+  const [textState, setTextState] = useState<TextAnnotationState>(initState);
 
   const setText = (text: string) => setTextState((prev) => ({ ...prev, text }));
   const setFontFamily = (fontFamily: string) => setTextState((prev) => ({ ...prev, fontFamily }));

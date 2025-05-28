@@ -9,10 +9,13 @@ import ShapeAnnotControl from './ShapeAnnotControl';
 import { cn } from '@/lib/utils';
 import { useTextAnnotationState } from '@/app/hooks/useAnnotText';
 import { useShapeAnnotationState } from '@/app/hooks/useAnnotShape';
-import { ShapeType } from '@/types/types';
-import { toHex } from '@/lib/annotations/annotationStyle';
-import { Button } from '@/components/ui/button';
-import { set } from 'zod';
+import {
+  extractFreeTextState,
+  extractShapeState,
+  getToolNameFromShapeType,
+  ShapeAnnotations,
+} from '@/lib/annotations/annotationStyle';
+import { TextAnnoInitState, ShapeAnnoInitState } from '@/constants/annotations';
 
 interface WebViewerProps {
   initialDoc: string;
@@ -48,7 +51,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     setTextFillColor,
     // setText,
     // resetText,
-  } = useTextAnnotationState();
+  } = useTextAnnotationState(TextAnnoInitState);
 
   const {
     shapeState,
@@ -64,7 +67,14 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     setShapeOpacity,
     setShapeRadioGroup,
     // resetShape,
-  } = useShapeAnnotationState();
+  } = useShapeAnnotationState(ShapeAnnoInitState);
+
+  // Popup data for annotation
+  const [selectedSpecificAnnot, setSelectedSpecificAnnot] = useState<
+    Core.Annotations.FreeTextAnnotation | ShapeAnnotations | null
+  >(null);
+  const textAnnoStateHook = useTextAnnotationState(TextAnnoInitState);
+  const shapeAnnoStateHook = useShapeAnnotationState(ShapeAnnoInitState);
 
   const [popupData, setPopupData] = useState<{
     visible: boolean;
@@ -79,6 +89,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
   });
 
   useEffect(() => {
+    console.log('WebViewer component mounted');
     let webViewerInstance: WebViewerInstance;
     const initializeWebViewer = async () => {
       try {
@@ -199,33 +210,59 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
           //     }
           //   }
           // );
-          annotManager.addEventListener('annotationSelected', function (annotations) {
-            if (annotations.length > 0) {
-              const annot = annotations[0];
-              // setSelectedAnnot(annot);
-
-              const doc = webViewerInstance.Core.documentViewer.getDocument();
-              const { x1, y1, x2, y2 } = annot.getRect();
-              const pageNumber = annot.PageNumber || annot.getPageNumber();
-              const bottomCenterX = (x1 + x2) / 2;
-              const bottomCenterY = y2;
-              const pos = doc.getViewerCoordinates(pageNumber, bottomCenterX, bottomCenterY);
-
-              // setDeleteBtnPos({
-              //   left: pos.x,
-              //   top: pos.y + 5, // dịch xuống 5px cho dễ bấm
-              // });
-              setPopupData({
-                visible: true,
-                x: pos.x,
-                y: pos.y + 8, // dịch xuống 8px cho dễ bấm
-                annotation: annot,
-              });
-              console.log('Annotation position:', pos);
-            } else {
-              // setDeleteBtnPos(null);
-              // setSelectedAnnot(null);
+          annotManager.addEventListener(
+            'annotationSelected',
+            function (annotations: Core.Annotations.FreeTextAnnotation[] | ShapeAnnotations[]) {
+              if (annotations.length === 1) {
+                const annotation = annotations[0];
+                console.log('SELECTED ANNOTATION:', annotation);
+                setPopupData((prev) => ({
+                  ...prev,
+                  visible: true,
+                  annotation,
+                }));
+                setSelectedSpecificAnnot(annotation);
+                // Update text state from selected annotation
+                if (annotation.Subject === 'Free Text') {
+                  const textState = extractFreeTextState(
+                    annotation as Core.Annotations.FreeTextAnnotation
+                  );
+                  textAnnoStateHook.setText(textState.text);
+                  textAnnoStateHook.setFontFamily(textState.fontFamily);
+                  textAnnoStateHook.setFontSize(textState.fontSize);
+                  textAnnoStateHook.setTextColor(textState.textColor);
+                  textAnnoStateHook.setTextStrokeColor(textState.strokeColor);
+                  textAnnoStateHook.setTextStrokeWidth(textState.strokeWidth);
+                  textAnnoStateHook.setTextFillColor(textState.fillColor);
+                  textAnnoStateHook.setTextOpacity(textState.opacity);
+                  textAnnoStateHook.setTextRadioGroup(textState.radioGroup);
+                } else {
+                  const shapeType = extractShapeState(annotation as ShapeAnnotations);
+                  console.log('SHAPE TYPE:', shapeType);
+                  shapeAnnoStateHook.setShapeType(shapeType.shapeType);
+                  shapeAnnoStateHook.setShapeStrokeColor(shapeType.strokeColor);
+                  shapeAnnoStateHook.setShapeStrokeWidth(shapeType.strokeWidth);
+                  shapeAnnoStateHook.setShapeFillColor(shapeType.fillColor);
+                  shapeAnnoStateHook.setShapeOpacity(shapeType.opacity);
+                  shapeAnnoStateHook.setShapeRadioGroup(shapeType.radioGroup);
+                }
+              } else {
+                setPopupData((prev) => ({
+                  ...prev,
+                  visible: false,
+                  annotation: null,
+                }));
+              }
             }
+          );
+
+          annotManager.addEventListener('annotationDeselected', (annotations) => {
+            console.log('DESELECTED ANNOTATION:', annotations);
+            setPopupData((prev) => ({
+              ...prev,
+              visible: false,
+              annotation: null,
+            }));
           });
         });
         documentViewer.addEventListener('zoomUpdated', (zoomLevel) => {
@@ -262,24 +299,8 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
       setZoom(newZoom);
     }
   };
-  function getToolNameFromShapeType(shapeType: ShapeType) {
-    switch (shapeType) {
-      case 'rectangle':
-        return 'AnnotationCreateRectangle';
-      case 'ellipse':
-        return 'AnnotationCreateEllipse';
-      case 'line':
-        return 'AnnotationCreateLine';
-      case 'arrow':
-        return 'AnnotationCreateArrow';
-      case 'triangle':
-        return 'AnnotationCreateTriangle';
-      default:
-        return 'AnnotationCreateRectangle';
-    }
-  }
 
-  // Update tool mode when selected annotation changes
+  // Update tool mode style when creating annotations
   useEffect(() => {
     if (instanceRef.current && isViewerReady) {
       if (selectedAnnotation === 'shape') {
@@ -381,183 +402,103 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
   //   };
   // }, [isViewerReady]);
 
-  // const displayCustomPopup = (annotation, instance) => {
-  //   const { documentViewer, Annotations } = instance.Core;
-  //   const pageIndex = annotation.PageNumber - 1;
+  // update UI for selected annotation
+  useEffect(() => {
+    if (!selectedSpecificAnnot || !instanceRef.current) return;
 
-  //   const quads = annotation.getQuads();
-  //   if (!quads || quads.length === 0) return;
+    const { Core } = instanceRef.current;
 
-  //   const quad = quads[0];
-  //   const { x1, y1 } = quad; // Lấy góc trên-trái của annotation
+    if (selectedSpecificAnnot instanceof Core.Annotations.FreeTextAnnotation) {
+      const { textState } = textAnnoStateHook;
 
-  //   // Chuyển từ tọa độ trang sang tọa độ màn hình
-  //   const coords = documentViewer
-  //     .getDisplayModeManager()
-  //     .getDisplayMode()
-  //     .getDocumentCoordinates(pageIndex, x1, y1);
+      selectedSpecificAnnot.FontSize = textState.fontSize.toString();
+      if (textState.textColor) {
+        selectedSpecificAnnot.TextColor = new Core.Annotations.Color(
+          textState.textColor.r,
+          textState.textColor.g,
+          textState.textColor.b
+        );
+      }
+      selectedSpecificAnnot.StrokeThickness = textState.strokeWidth;
+      selectedSpecificAnnot.StrokeColor = new Core.Annotations.Color(
+        textState.strokeColor?.r ?? 255,
+        textState.strokeColor?.g ?? 255,
+        textState.strokeColor?.b ?? 255,
+        textState.strokeColor ? 1 : 0 // Set alpha to 1 if stroke color is set, otherwise 0
+      );
+      selectedSpecificAnnot.FillColor = new Core.Annotations.Color(
+        textState.fillColor?.r ?? 255,
+        textState.fillColor?.g ?? 255,
+        textState.fillColor?.b ?? 255,
+        textState.fillColor ? 1 : 0 // Set alpha to 1 if fill color is set, otherwise 0
+      );
 
-  //   const container = instance.UI.viewerElement;
-  //   const rect = container.getBoundingClientRect();
+      selectedSpecificAnnot.Opacity = textState.opacity;
+    } else {
+      console.log('Updating shape annotation:', selectedSpecificAnnot);
+      const { shapeState } = shapeAnnoStateHook;
+      selectedSpecificAnnot.StrokeThickness = shapeState.strokeWidth;
+      selectedSpecificAnnot.StrokeColor = new Core.Annotations.Color(
+        shapeState.strokeColor?.r ?? 255,
+        shapeState.strokeColor?.g ?? 255,
+        shapeState.strokeColor?.b ?? 255,
+        shapeState.strokeColor ? 1 : 0 // Set alpha to 1 if stroke color is set, otherwise 0
+      );
+      console.log('Shape fill color:', shapeState.fillColor);
+      selectedSpecificAnnot.FillColor = new Core.Annotations.Color(
+        shapeState.fillColor?.r ?? 255,
+        shapeState.fillColor?.g ?? 255,
+        shapeState.fillColor?.b ?? 255,
+        shapeState.fillColor?.a === 0 ? 0 : shapeState.fillColor?.a // Set alpha to 1 if fill color is set, otherwise 0
+      );
+      console.log('SET FILL COLOR:', selectedSpecificAnnot.FillColor);
+      selectedSpecificAnnot.Opacity = shapeState.opacity;
+    }
 
-  //   const scrollElement = instance.Core.documentViewer.getScrollViewElement();
-
-  //   const scrollLeft = scrollElement.scrollLeft;
-  //   const scrollTop = scrollElement.scrollTop;
-
-  //   const zoom = documentViewer.getZoom();
-
-  //   const left = coords.x * zoom - scrollLeft;
-  //   const top = coords.y * zoom - scrollTop;
-
-  //   // Lưu lại vị trí popup
-  //   setPopupPosition({ top, left });
-  //   setSelectedTextAnnot(annotation);
-  // };
-
-  // Handle annotation added event for shape annotations
-  // useEffect(() => {
-  //   if (!instanceRef.current || !isViewerReady || selectedAnnotation !== 'shape') return;
-
-  //   const { Core } = instanceRef.current;
-  //   const toolName = getToolNameFromShapeType(shapeState.shapeType);
-  //   const tool = Core.documentViewer.getTool(toolName);
-
-  //   console.log('Current tool:', tool);
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   const onAnnotAdded = (annot: typeof Core.Annotations.Annotation | any) => {
-  //     const { Annotations } = Core;
-
-  //     const isBuiltInShape =
-  //       annot instanceof Annotations.RectangleAnnotation ||
-  //       annot instanceof Annotations.EllipseAnnotation ||
-  //       annot instanceof Annotations.LineAnnotation;
-
-  //     const isTriangleShape = annot.Subject === 'Triangle' && annot.elementName === 'triangle';
-
-  //     if (isBuiltInShape || isTriangleShape) {
-  //       console.log('Shape annotation added:', annot);
-  //       // Stroke
-  //       if (shapeState.strokeColor) {
-  //         annot.StrokeColor = new Annotations.Color(
-  //           shapeState.strokeColor.r,
-  //           shapeState.strokeColor.g,
-  //           shapeState.strokeColor.b
-  //         );
-  //       }
-
-  //       // Fill
-  //       if ('FillColor' in annot && shapeState.fillColor) {
-  //         annot.FillColor = new Annotations.Color(
-  //           shapeState.fillColor.r,
-  //           shapeState.fillColor.g,
-  //           shapeState.fillColor.b
-  //         );
-  //       } else if ('FillColor' in annot) {
-  //         annot.FillColor = new Annotations.Color(255, 255, 255, 0);
-  //       }
-
-  //       // Opacity, thickness
-  //       annot.StrokeThickness = shapeState.strokeWidth;
-  //       annot.Opacity = shapeState.opacity;
-
-  //       Core.documentViewer.getAnnotationManager().redrawAnnotation(annot);
-  //     }
-  //   };
-
-  //   tool.addEventListener('annotationAdded', onAnnotAdded);
-
-  //   return () => {
-  //     tool.removeEventListener('annotationAdded', onAnnotAdded);
-  //   };
-  // }, [shapeState, selectedAnnotation, isViewerReady, instanceRef.current]);
-
-  // Handle annotation added event for text annotations
-  // useEffect(() => {
-  //   if (!instanceRef.current || !isViewerReady || selectedAnnotation !== 'text') return;
-
-  //   const { Core } = instanceRef.current;
-  //   const tool = Core.documentViewer.getTool('AnnotationCreateFreeText');
-
-  //   // const onAnnotAdded = (annot: Core.Annotations.Annotation) => {
-  //   //   const { Annotations } = Core;
-  //   //   console.log('Text annotation added:', annot);
-
-  //   //   if (annot instanceof Annotations.FreeTextAnnotation) {
-  //   //     // Padding
-  //   //     // annot.setPadding(new Core.Math.Rect(4, 4, 4, 4));
-
-  //   //     // Font settings
-  //   //     annot.FontSize = textState.fontSize.toString();
-
-  //   //     // annot.setFont(textState.fontFamily);
-
-  //   //     // Text color
-  //   //     if (textState.textColor) {
-  //   //       annot.TextColor = new Annotations.Color(
-  //   //         textState.textColor.r,
-  //   //         textState.textColor.g,
-  //   //         textState.textColor.b
-  //   //       );
-  //   //     }
-
-  //   //     // Stroke
-  //   //     annot.StrokeThickness = textState.strokeWidth;
-  //   //     if (textState.strokeColor) {
-  //   //       annot.StrokeColor = new Annotations.Color(
-  //   //         textState.strokeColor.r,
-  //   //         textState.strokeColor.g,
-  //   //         textState.strokeColor.b
-  //   //       );
-  //   //     }
-
-  //   //     // Opacity
-  //   //     annot.Opacity = textState.opacity;
-
-  //   //     // Redraw
-  //   //     Core.documentViewer.getAnnotationManager().redrawAnnotation(annot);
-  //   //   }
-  //   // };
-
-  //   const onAnnotAdded = (annot: Core.Annotations.Annotation) => {
-  //     const { Annotations } = Core;
-
-  //     if (annot instanceof Annotations.FreeTextAnnotation) {
-  //       const annotManager = Core.documentViewer.getAnnotationManager();
-  //       console.log('Text annotation added:', annot);
-  //       console.log('Text state:', `${textState.fontSize}pt`);
-  //       annotManager.setAnnotationStyles(annot, {
-  //         FontSize: `${textState.fontSize}pt`,
-  //         // TextColor: new Core.Annotations.Color(
-  //         //   textState.textColor?.r ?? 0,
-  //         //   textState.textColor?.g ?? 0,
-  //         //   textState.textColor?.b ?? 0
-  //         // ),
-  //         // StrokeThickness: textState.strokeWidth,
-  //         // StrokeColor: new Core.Annotations.Color(
-  //         //   textState.strokeColor?.r ?? 0,
-  //         //   textState.strokeColor?.g ?? 0,
-  //         //   textState.strokeColor?.b ?? 0
-  //         // ),
-  //         // Opacity: textState.opacity,
-  //       });
-  //       annotManager.redrawAnnotation(annot);
-  //     }
-  //   };
-
-  //   tool.addEventListener('annotationAdded', onAnnotAdded);
-
-  //   return () => {
-  //     tool.removeEventListener('annotationAdded', onAnnotAdded);
-  //   };
-  // }, [textState, selectedAnnotation, isViewerReady]);
+    console.log(selectedSpecificAnnot);
+    // Redraw annotation
+    const annotManager = Core.documentViewer.getAnnotationManager();
+    annotManager.redrawAnnotation(selectedSpecificAnnot);
+  }, [
+    textAnnoStateHook.textState,
+    selectedSpecificAnnot,
+    shapeAnnoStateHook.shapeState,
+    instanceRef.current,
+  ]);
 
   return (
     <div className='flex-1 flex flex-col rounded-2xl overflow-hidden border-[1px] border-[#D9D9D9] relative'>
       <div className='flex-1 overflow-hidden '>
-        <div className='webviewer' ref={viewer} style={{ height: '100%' }}></div>
+        <div
+          className='webviewer'
+          ref={viewer}
+          style={{ height: '100%' }}
+          onMouseDown={(e: React.MouseEvent) => {
+            if (!viewer.current || !instanceRef.current) return;
+            const { documentViewer } = instanceRef.current.Core;
+            const annotManager = documentViewer.getAnnotationManager();
+            const selectedAnnots = annotManager.getSelectedAnnotations();
+
+            if (selectedAnnots.length === 0) {
+              // Người dùng click nền (viewer), không phải annotation
+              console.log('Clicked on empty viewer');
+              const rect = viewer.current.getBoundingClientRect();
+
+              const relativeX = e.clientX - rect.left;
+              const relativeY = e.clientY - rect.top + 20;
+
+              setPopupData((prev) => ({
+                ...prev,
+                visible: false,
+                annotation: null,
+                x: relativeX,
+                y: relativeY,
+              }));
+            }
+          }}
+        ></div>
       </div>
-      {popupData.visible && (
+      {popupData.visible && isViewerReady && selectedSpecificAnnot && (
         <div
           className='absolute z-10050'
           style={{
@@ -565,11 +506,41 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
             left: popupData.x,
           }}
         >
-          {/* <TextAnnotControl
-            annotation={selectedTextAnnot}
-            onClose={() => setSelectedTextAnnot(null)}
-          /> */}
-          <Button>checking for POPUP</Button>
+          {selectedSpecificAnnot.Subject === 'Free Text' ? (
+            <TextAnnotControl
+              textState={textAnnoStateHook.textState}
+              textOpacityInput={textAnnoStateHook.textOpacityInput}
+              textStrokeWidthInput={textAnnoStateHook.textStrokeWidthInput}
+              setTextInputOnSubmit={textAnnoStateHook.setTextInputOnSubmit}
+              setTextInputIsEdit={textAnnoStateHook.setTextInputIsEdit}
+              setTextInputChange={textAnnoStateHook.setTextInputChange}
+              setFontFamily={textAnnoStateHook.setFontFamily}
+              setFontSize={textAnnoStateHook.setFontSize}
+              setTextColor={textAnnoStateHook.setTextColor}
+              setTextStrokeColor={textAnnoStateHook.setTextStrokeColor}
+              setTextStrokeWidth={textAnnoStateHook.setTextStrokeWidth}
+              setTextOpacity={textAnnoStateHook.setTextOpacity}
+              setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
+              setTextFillColor={textAnnoStateHook.setTextFillColor}
+              forSpecificAnnot={true}
+            />
+          ) : (
+            <ShapeAnnotControl
+              shapeState={shapeAnnoStateHook.shapeState}
+              shapeOpacityInput={shapeAnnoStateHook.shapeOpacityInput}
+              shapeStrokeWidthInput={shapeAnnoStateHook.shapeStrokeWidthInput}
+              setShapeInputOnSubmit={shapeAnnoStateHook.setShapeInputOnSubmit}
+              setShapeInputIsEdit={shapeAnnoStateHook.setShapeInputIsEdit}
+              setShapeInputChange={shapeAnnoStateHook.setShapeInputChange}
+              setShapeType={shapeAnnoStateHook.setShapeType}
+              setShapeStrokeColor={shapeAnnoStateHook.setShapeStrokeColor}
+              setShapeStrokeWidth={shapeAnnoStateHook.setShapeStrokeWidth}
+              setShapeFillColor={shapeAnnoStateHook.setShapeFillColor}
+              setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
+              setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
+              forSpecificAnnot={true}
+            />
+          )}
         </div>
       )}
 

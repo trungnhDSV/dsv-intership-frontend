@@ -14,6 +14,7 @@ export interface RGBColor {
   r: number;
   g: number;
   b: number;
+  a?: number;
 }
 export interface ShapeAnnotationState {
   shapeType: ShapeType;
@@ -27,7 +28,7 @@ export interface TextAnnotationState {
   text: string;
   fontFamily: string;
   fontSize: number;
-  textColor: RGBColor | null;
+  textColor: RGBColor;
   strokeColor: RGBColor | null;
   strokeWidth: number;
   fillColor: RGBColor | null;

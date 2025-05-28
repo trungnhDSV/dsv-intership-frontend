@@ -1,15 +1,8 @@
 import { RGBColor, ShapeAnnotationState, ShapeType } from '@/types/types';
 import { useState } from 'react';
 
-export function useShapeAnnotationState() {
-  const [shapeState, setShapeState] = useState<ShapeAnnotationState>({
-    shapeType: 'rectangle',
-    strokeColor: { r: 0, g: 0, b: 0 }, // Default stroke BLACK color as RGB object
-    strokeWidth: 1,
-    fillColor: null,
-    opacity: 1,
-    radioGroup: 'fill',
-  });
+export function useShapeAnnotationState(initState: ShapeAnnotationState) {
+  const [shapeState, setShapeState] = useState<ShapeAnnotationState>(initState);
 
   const setShapeType = (shapeType: ShapeType) => setShapeState((prev) => ({ ...prev, shapeType }));
 
@@ -92,6 +85,7 @@ export function useShapeAnnotationState() {
       setStrokeWidthInput((prev) => ({ ...prev, value }));
     }
   };
+  console.log('shapeState.fillColor', shapeState.fillColor);
 
   return {
     shapeState,
