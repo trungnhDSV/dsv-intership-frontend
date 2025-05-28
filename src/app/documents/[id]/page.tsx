@@ -36,7 +36,7 @@ const DocPage = () => {
     fetchDoc();
   }, [id]);
   return (
-    <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)]'>
+    <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
       <div className='flex items-center justify-between'>
         <div className='flex items-center'>
           <div className='p-5 mr-3'>

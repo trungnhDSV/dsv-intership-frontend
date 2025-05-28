@@ -27,9 +27,10 @@ interface TextAnnotControlProps {
   setTextStrokeWidth: ReturnType<typeof useTextAnnotationState>['setTextStrokeWidth'];
   setTextOpacity: ReturnType<typeof useTextAnnotationState>['setTextOpacity'];
   setTextRadioGroup: ReturnType<typeof useTextAnnotationState>['setTextRadioGroup'];
+  setTextFillColor: ReturnType<typeof useTextAnnotationState>['setTextFillColor'];
 }
 
-const ShapeAnnotControl = ({
+const TextAnnotControl = ({
   textState,
   textOpacityInput,
   textStrokeWidthInput,
@@ -43,6 +44,7 @@ const ShapeAnnotControl = ({
   setTextStrokeWidth,
   setTextOpacity,
   setTextRadioGroup,
+  setTextFillColor,
 }: TextAnnotControlProps) => {
   return (
     <DropdownMenu>
@@ -159,10 +161,16 @@ const ShapeAnnotControl = ({
                   <div
                     className={cn(
                       'w-[30px] h-[30px] p-1 rounded-full flex items-center justify-center',
-                      !textState.strokeColor && 'ring-1 ring-[#161C21]'
+                      (textState.radioGroup === 'borderLine'
+                        ? !textState.strokeColor
+                        : !textState.fillColor) && 'ring-1 ring-[#161C21]'
                     )}
                     key={'colorNone'}
-                    onClick={() => setTextStrokeColor(null)}
+                    onClick={() =>
+                      textState.radioGroup === 'borderLine'
+                        ? setTextStrokeColor(null)
+                        : setTextFillColor(null)
+                    }
                   >
                     <Image
                       src='/icons/Circle.png'
@@ -175,10 +183,19 @@ const ShapeAnnotControl = ({
                   {COLOR_OPTIONS.map((color) => (
                     <div
                       key={color.label}
-                      onClick={() => setTextStrokeColor(color.value)}
+                      onClick={() =>
+                        textState.radioGroup === 'borderLine'
+                          ? setTextStrokeColor(color.value)
+                          : setTextFillColor(color.value)
+                      }
                       className={cn(
                         'w-[30px] h-[30px] p-1 rounded-full flex items-center justify-center',
-                        isSameColor(color.value, textState.strokeColor) && 'ring-1 ring-[#161C21]'
+                        isSameColor(
+                          color.value,
+                          textState.radioGroup === 'borderLine'
+                            ? textState.strokeColor
+                            : textState.fillColor
+                        ) && 'ring-1 ring-[#161C21]'
                       )}
                     >
                       <div
@@ -305,4 +322,4 @@ const ShapeAnnotControl = ({
   );
 };
 
-export default ShapeAnnotControl;
+export default TextAnnotControl;

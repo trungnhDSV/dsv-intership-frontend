@@ -30,6 +30,7 @@ export interface TextAnnotationState {
   textColor: RGBColor | null;
   strokeColor: RGBColor | null;
   strokeWidth: number;
+  fillColor: RGBColor | null;
   opacity: number;
   radioGroup: RadioGroupType;
 }

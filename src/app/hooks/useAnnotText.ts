@@ -8,7 +8,8 @@ export function useTextAnnotationState() {
     fontSize: 12,
     textColor: { r: 0, g: 0, b: 0 }, // Default stroke BLACK color as RGB object
     strokeColor: null,
-    strokeWidth: 1,
+    strokeWidth: 0,
+    fillColor: null,
     opacity: 1,
     radioGroup: 'fill',
   });
@@ -31,8 +32,9 @@ export function useTextAnnotationState() {
       fontSize: 12,
       textColor: { r: 0, g: 0, b: 0 },
       strokeColor: null,
-      strokeWidth: 1,
+      strokeWidth: 0,
       opacity: 1,
+      fillColor: null,
       radioGroup: 'fill',
     });
 
@@ -89,6 +91,9 @@ export function useTextAnnotationState() {
     }
   };
 
+  const setTextFillColor = (fillColor: RGBColor | null) =>
+    setTextState((prev) => ({ ...prev, fillColor }));
+
   return {
     textState,
     textOpacityInput: opacityInput,
@@ -102,6 +107,7 @@ export function useTextAnnotationState() {
     setTextColor,
     setTextStrokeColor: setStrokeColor,
     setTextStrokeWidth: setStrokeWidth,
+    setTextFillColor,
     setTextOpacity: setOpacity,
     setTextRadioGroup: setRadioGroup,
     resetText: reset,

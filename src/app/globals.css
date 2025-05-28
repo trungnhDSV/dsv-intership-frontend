@@ -169,7 +169,7 @@
   background-color: #ebffee !important;
 }
 
-div[data-element='pageNav-floating-header'] {
+/* div[data-element='pageNav-floating-header'] {
   display: none !important;
 }
 
@@ -184,7 +184,7 @@ div.FloatSection.center__bottom {
 
 .bottom-headers-wrapper {
   display: none !important;
-}
+} */
 
 .opacity-slider-track {
   height: 12px;
