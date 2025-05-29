@@ -85,7 +85,6 @@ export function useShapeAnnotationState(initState: ShapeAnnotationState) {
       setStrokeWidthInput((prev) => ({ ...prev, value }));
     }
   };
-  console.log('shapeState.fillColor', shapeState.fillColor);
 
   return {
     shapeState,

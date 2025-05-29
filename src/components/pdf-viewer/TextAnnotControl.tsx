@@ -65,7 +65,14 @@ const TextAnnotControl = ({
                 <div className='flex-1 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center overflow-hidden'>
                   <DropdownMenu>
                     <DropdownMenuTrigger className='p-4 flex-1 flex items-center bg-white w-full h-full'>
-                      <span className='flex-1 text-start'>{textState.fontFamily}</span>
+                      <span
+                        className={cn(
+                          'flex-1 text-start',
+                          `font-${textState.fontFamily.replaceAll(' ', '').toLowerCase()}`
+                        )}
+                      >
+                        {textState.fontFamily}
+                      </span>
                       <ChevronDown className='w-4 h-4' />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -79,7 +86,8 @@ const TextAnnotControl = ({
                           onClick={() => setFontFamily(option.value)}
                           className={cn(
                             'px-4 py-3 rounded-md text-sm text-start',
-                            textState.fontFamily === option.value && 'bg-[#D9D9D9]'
+                            textState.fontFamily === option.value && 'bg-[#D9D9D9]',
+                            `font-${option.value.replaceAll(' ', '').toLowerCase()}`
                           )}
                         >
                           {option.label}
