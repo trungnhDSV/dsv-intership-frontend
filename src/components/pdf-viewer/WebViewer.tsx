@@ -3,7 +3,7 @@ import PaginantionControl from '@/components/pdf-viewer/PaginantionControl';
 import { ZoomControls } from '@/components/pdf-viewer/ZoomControl';
 import { Core, WebViewerInstance } from '@pdftron/webviewer';
 import Image from 'next/image';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import TextAnnotControl from './TextAnnotControl';
 import ShapeAnnotControl from './ShapeAnnotControl';
 import { cn } from '@/lib/utils';
@@ -18,12 +18,27 @@ import {
   updateShapeAnnotationFields,
 } from '@/lib/annotations/annotationStyle';
 import { TextAnnoInitState, ShapeAnnoInitState } from '@/constants/annotations';
+import { ArrowLeft, Download, Share } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { FileMetadata } from '@/types/types';
+import { Session } from 'next-auth';
 
 interface WebViewerProps {
-  initialDoc: string;
+  initialDoc: string | null;
+  docData: FileMetadata | null;
+  session: Session | null;
+  handleOpenShareDialog: () => void;
 }
 
-export default function WebViewer({ initialDoc }: WebViewerProps) {
+export default function WebViewer({
+  initialDoc,
+  docData,
+  session,
+  handleOpenShareDialog,
+}: WebViewerProps) {
+  const router = useRouter();
+
   const viewer = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<WebViewerInstance | null>(null);
   const [isViewerReady, setIsViewerReady] = useState(false);
@@ -90,6 +105,8 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
   });
   const popupRef = useRef<HTMLDivElement>(null);
 
+  // share
+
   useEffect(() => {
     let webViewerInstance: WebViewerInstance;
     const initializeWebViewer = async () => {
@@ -118,11 +135,11 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
               'page-nav-floating-header', // pagination controls
               'contextMenuPopup', // Ẩn menu ngữ cảnh
               'textPopup', // Ẩn popup văn bản
-              // 'annotationPopup', // Ẩn popup chú thích
-              // 'annotationCommentButton',
-              // 'annotationStyleEditButton',
-              // 'linkButton',
-              // 'annotationDeleteButton',
+              'annotationPopup', // Ẩn popup chú thích
+              'annotationCommentButton',
+              'annotationStyleEditButton',
+              'linkButton',
+              'annotationDeleteButton',
             ],
           },
           viewer.current
@@ -138,7 +155,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
         const { documentViewer } = webViewerInstance.Core;
         const annotManager = documentViewer.getAnnotationManager();
 
-        documentViewer.addEventListener('documentLoaded', () => {
+        documentViewer.addEventListener('documentLoaded', async () => {
           // Disable page navigation features
           webViewerInstance.UI.disableFeatures([webViewerInstance.UI.Feature.PageNavigation]);
           instanceRef.current?.UI.disableElements(['annotationPopup']);
@@ -154,6 +171,31 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
 
           setIsViewerReady(true);
 
+          // LOAD ANNOTATIONS
+          // 1. Gọi API lấy annotation XFDF từ backend
+          try {
+            const res = await fetch(
+              `${process.env.NEXT_PUBLIC_API_URL}/documents/${docData?.id}/annotations`
+            );
+            const data = await res.json();
+            console.log('Fetched annotation data:', data.data.url);
+            if (data.data.url) {
+              // 2. Fetch content từ presigned url
+              const xfdfRes = await fetch(data.data.url);
+              const xfdfString = await xfdfRes.text();
+
+              // 3. Import annotation vào WebViewer
+              console.log('Importing annotations:', xfdfString);
+              await annotManager.importAnnotations(xfdfString);
+
+              // Nếu muốn fit page/refresh có thể gọi:
+              // instanceRef.current.Core.documentViewer.updateView();
+            }
+          } catch (err) {
+            console.error('Failed to load annotation:', err);
+          }
+
+          // set page coordinates for popup annotation
           annotManager.addEventListener(
             'annotationSelected',
             function (annotations: Core.Annotations.FreeTextAnnotation[] | ShapeAnnotations[]) {
@@ -169,15 +211,12 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
                 const scrollEl = webViewerInstance.Core.documentViewer.getScrollViewElement();
                 const scrollLeft = scrollEl?.scrollLeft || 0;
                 const scrollTop = scrollEl?.scrollTop || 0;
-                // console.log('SCROLL ELEMENT:', scrollLeft, scrollTop);
                 const pagePoint = {
                   x: annotRect.x2,
                   y: annotRect.y2,
                 };
                 const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
                 const windowPoint = displayMode.pageToWindow(pagePoint, currentPage);
-                // windowPoint.y += 60 + 24 + 64;
-                // 60px for header, 24px for pt, 64px for controls
 
                 setPopupData({
                   visible: true,
@@ -227,13 +266,15 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
         documentViewer.addEventListener('loadError', (error) => {
           console.error('PDF load error:', error);
         });
+
+        console.log('WebViewer initialized with document:', docData, initialDoc, session);
       } catch (error) {
         console.error('Error initializing WebViewer:', error);
       }
     };
 
     initializeWebViewer();
-  }, [viewer, initialDoc]);
+  }, [viewer.current, initialDoc]);
 
   // Register custom annotation tools
   useEffect(() => {
@@ -247,13 +288,6 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
       init();
     }
   }, [isViewerReady]);
-
-  const handleSetZoom = (newZoom: number) => {
-    if (instanceRef.current) {
-      instanceRef.current.Core.documentViewer.zoomTo(newZoom);
-      setZoom(newZoom);
-    }
-  };
 
   // Update tool mode style when creating annotations
   useEffect(() => {
@@ -349,6 +383,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     instanceRef.current,
   ]);
 
+  // handle auto-fit text when freetext annotation changes
   useEffect(() => {
     if (!isViewerReady || !instanceRef.current) return;
 
@@ -382,6 +417,56 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     };
   }, [isViewerReady, instanceRef.current]);
 
+  // handle auto save when annotations change
+  useEffect(() => {
+    if (!instanceRef.current) return;
+
+    const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
+    let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const handleAnnotationChanged = async () => {
+      if (saveTimeout) clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(async () => {
+        // 1. Export XFDF
+        const xfdfString = await annotManager.exportAnnotations();
+
+        // 2. Gửi lên backend
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/documents/${docData?.id}/annotations`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ xfdf: xfdfString }),
+          }
+        );
+        if (!res.ok) {
+          console.error('Failed to save annotations:', res.statusText);
+          return;
+        }
+        const data = await res.json();
+        console.log('Annotations saved successfully:', data);
+
+        // Bạn có thể set state "saved", "saving" tại đây nếu muốn feedback UI
+      }, 2000); // chỉ gọi API nếu 15s không có thao tác mới
+    };
+
+    annotManager.addEventListener('annotationChanged', handleAnnotationChanged);
+
+    // Cleanup
+    return () => {
+      annotManager.removeEventListener('annotationChanged', handleAnnotationChanged);
+      if (saveTimeout) clearTimeout(saveTimeout);
+    };
+  }, [isViewerReady, docData]);
+
+  if (!docData || !initialDoc || !session) {
+    return (
+      <div className='flex items-center justify-center h-full'>
+        <p className='text-gray-500'>Loading document...</p>
+      </div>
+    );
+  }
+
   const handleDeleteAnnotation = () => {
     if (!instanceRef.current) return;
     const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
@@ -396,177 +481,244 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
       setSelectedSpecificAnnot(null);
     }
   };
+  const handleDownload = async () => {
+    if (!instanceRef.current) return;
+    console.log('Downloading PDF with annotations...');
+    const { documentViewer } = instanceRef.current.Core;
+
+    // Đảm bảo document đã load
+    if (!documentViewer.getDocument()) return;
+
+    try {
+      // Xuất file PDF có annotation (blob)
+      const xfdfString = await instanceRef.current.Core.annotationManager.exportAnnotations();
+      const options = { xfdfString };
+      const doc = await documentViewer.getDocument().getFileData(options);
+
+      // Chuyển sang Blob
+      const blob = new Blob([doc], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+
+      // Tạo link download và trigger
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = docData.name || 'annotated.pdf'; // có thể dùng doc.name từ props
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download error:', error);
+    }
+  };
+  const handleSetZoom = (newZoom: number) => {
+    if (instanceRef.current) {
+      instanceRef.current.Core.documentViewer.zoomTo(newZoom);
+      setZoom(newZoom);
+    }
+  };
 
   return (
-    <div className='flex-1 flex flex-col rounded-2xl overflow-hidden border-[1px] border-[#D9D9D9] relative'>
-      <div className='flex-1 overflow-hidden '>
-        <div
-          className='webviewer'
-          ref={viewer}
-          style={{ height: '100%' }}
-          onMouseDown={() => {
-            if (!viewer.current || !instanceRef.current) return;
-            const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
-            const selectedAnnots = annotManager.getSelectedAnnotations();
-            if (selectedAnnots.length === 0) {
-              // Người dùng click nền (viewer), không phải annotation
-              console.log('Clicked on empty viewer');
-              if (popupData.visible && popupData.annotation) {
-                setPopupData((prev) => ({
-                  ...prev,
-                  visible: false,
-                  annotation: null,
-                }));
-              }
-            }
-          }}
-        ></div>
-      </div>
-      {popupData.visible &&
-        isViewerReady &&
-        selectedSpecificAnnot &&
-        selectedSpecificAnnot.Subject && (
-          <div
-            className='absolute z-10050'
-            ref={popupRef}
-            style={{
-              top: popupData.y,
-              left: popupData.x,
-            }}
-          >
-            {selectedSpecificAnnot.Subject === 'Free Text' ? (
-              <TextAnnotControl
-                textState={textAnnoStateHook.textState}
-                textOpacityInput={textAnnoStateHook.textOpacityInput}
-                textStrokeWidthInput={textAnnoStateHook.textStrokeWidthInput}
-                setTextInputOnSubmit={textAnnoStateHook.setTextInputOnSubmit}
-                setTextInputIsEdit={textAnnoStateHook.setTextInputIsEdit}
-                setTextInputChange={textAnnoStateHook.setTextInputChange}
-                setFontFamily={textAnnoStateHook.setFontFamily}
-                setFontSize={textAnnoStateHook.setFontSize}
-                setTextColor={textAnnoStateHook.setTextColor}
-                setTextStrokeColor={textAnnoStateHook.setTextStrokeColor}
-                setTextStrokeWidth={textAnnoStateHook.setTextStrokeWidth}
-                setTextOpacity={textAnnoStateHook.setTextOpacity}
-                setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
-                setTextFillColor={textAnnoStateHook.setTextFillColor}
-                forSpecificAnnot={true}
-                handleDeleteAnnotation={handleDeleteAnnotation}
-              />
-            ) : (
-              <ShapeAnnotControl
-                shapeState={shapeAnnoStateHook.shapeState}
-                shapeOpacityInput={shapeAnnoStateHook.shapeOpacityInput}
-                shapeStrokeWidthInput={shapeAnnoStateHook.shapeStrokeWidthInput}
-                setShapeInputOnSubmit={shapeAnnoStateHook.setShapeInputOnSubmit}
-                setShapeInputIsEdit={shapeAnnoStateHook.setShapeInputIsEdit}
-                setShapeInputChange={shapeAnnoStateHook.setShapeInputChange}
-                setShapeType={shapeAnnoStateHook.setShapeType}
-                setShapeStrokeColor={shapeAnnoStateHook.setShapeStrokeColor}
-                setShapeStrokeWidth={shapeAnnoStateHook.setShapeStrokeWidth}
-                setShapeFillColor={shapeAnnoStateHook.setShapeFillColor}
-                setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
-                setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
-                forSpecificAnnot={true}
-                handleDeleteAnnotation={handleDeleteAnnotation}
-              />
-            )}
+    <>
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center'>
+          <div className='p-5 mr-3'>
+            <ArrowLeft className='h-5 w-5 cursor-pointer' onClick={() => router.back()} />
           </div>
-        )}
-
-      {/* Controls Bar */}
-      <div className='flex items-center justify-center py-3 px-2 gap-2 bg-white border-t border-[#D9D9D9] h-fit'>
-        {/* Zoom Controls */}
-        <ZoomControls zoom={zoom} setZoom={handleSetZoom} isViewerReady={isViewerReady} />
-
-        {/* Page Navigation */}
-        <PaginantionControl
-          isViewerReady={isViewerReady}
-          instanceRef={instanceRef}
-          numPages={numPages}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          isEditingPage={isEditingPage}
-          setIsEditingPage={setIsEditingPage}
-          pageInput={pageInput}
-          setPageInput={setPageInput}
-        />
-      </div>
-
-      {/* Annotation Control */}
-      <div className='absolute bottom-[92px] right-[49px] z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
-        {/* SHAPE ANNOTATION */}
-        <div className='flex'>
-          <button
-            className={cn(
-              'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
-              selectedAnnotation === 'shape' && 'bg-[#D9D9D9]'
-            )}
+          <p className='font-semibold text-2xl'>{docData.name}</p>
+        </div>
+        <div className='flex items-center gap-3'>
+          <Button
+            variant='outline'
+            className='w-fit bg-[#E3E3E3] border-[#767676]'
+            onClick={handleDownload}
+          >
+            <Download className='mr-2 h-4 w-4 cursor-pointer' />
+            Download
+          </Button>
+          <Button
+            variant='outline'
+            className='w-fit bg-[#E3E3E3] border-[#767676]'
             onClick={() => {
-              if (selectedAnnotation === 'shape') {
-                setSelectedAnnotation(null);
-              } else {
-                setSelectedAnnotation('shape');
-              }
+              console.log('Open share dialog');
+              handleOpenShareDialog();
             }}
           >
-            <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
-            <span>Shape</span>
-          </button>
-          <ShapeAnnotControl
-            shapeState={shapeState}
-            shapeOpacityInput={shapeOpacityInput}
-            shapeStrokeWidthInput={shapeStrokeWidthInput}
-            setShapeInputOnSubmit={setShapeInputOnSubmit}
-            setShapeInputIsEdit={setShapeInputIsEdit}
-            setShapeInputChange={setShapeInputChange}
-            setShapeType={setShapeType}
-            setShapeStrokeColor={setShapeStrokeColor}
-            setShapeStrokeWidth={setShapeStrokeWidth}
-            setShapeFillColor={setShapeFillColor}
-            setShapeOpacity={setShapeOpacity}
-            setShapeRadioGroup={setShapeRadioGroup}
+            <Share className='mr-2 h-4 w-4' />
+            Share
+          </Button>
+        </div>
+      </div>
+      <div className='flex-1 flex flex-col rounded-2xl overflow-hidden border-[1px] border-[#D9D9D9] relative'>
+        <div className='flex-1 overflow-hidden '>
+          <div
+            className='webviewer'
+            ref={viewer}
+            style={{ height: '100%' }}
+            onMouseDown={() => {
+              if (!viewer.current || !instanceRef.current) return;
+              const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
+              const selectedAnnots = annotManager.getSelectedAnnotations();
+              if (selectedAnnots.length === 0) {
+                // Người dùng click nền (viewer), không phải annotation
+                console.log('Clicked on empty viewer');
+                if (popupData.visible && popupData.annotation) {
+                  setPopupData((prev) => ({
+                    ...prev,
+                    visible: false,
+                    annotation: null,
+                  }));
+                }
+              }
+            }}
+          ></div>
+        </div>
+        {popupData.visible &&
+          isViewerReady &&
+          selectedSpecificAnnot &&
+          selectedSpecificAnnot.Subject && (
+            <div
+              className='absolute z-10050'
+              ref={popupRef}
+              style={{
+                top: popupData.y,
+                left: popupData.x,
+              }}
+            >
+              {selectedSpecificAnnot.Subject === 'Free Text' ? (
+                <TextAnnotControl
+                  textState={textAnnoStateHook.textState}
+                  textOpacityInput={textAnnoStateHook.textOpacityInput}
+                  textStrokeWidthInput={textAnnoStateHook.textStrokeWidthInput}
+                  setTextInputOnSubmit={textAnnoStateHook.setTextInputOnSubmit}
+                  setTextInputIsEdit={textAnnoStateHook.setTextInputIsEdit}
+                  setTextInputChange={textAnnoStateHook.setTextInputChange}
+                  setFontFamily={textAnnoStateHook.setFontFamily}
+                  setFontSize={textAnnoStateHook.setFontSize}
+                  setTextColor={textAnnoStateHook.setTextColor}
+                  setTextStrokeColor={textAnnoStateHook.setTextStrokeColor}
+                  setTextStrokeWidth={textAnnoStateHook.setTextStrokeWidth}
+                  setTextOpacity={textAnnoStateHook.setTextOpacity}
+                  setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
+                  setTextFillColor={textAnnoStateHook.setTextFillColor}
+                  forSpecificAnnot={true}
+                  handleDeleteAnnotation={handleDeleteAnnotation}
+                />
+              ) : (
+                <ShapeAnnotControl
+                  shapeState={shapeAnnoStateHook.shapeState}
+                  shapeOpacityInput={shapeAnnoStateHook.shapeOpacityInput}
+                  shapeStrokeWidthInput={shapeAnnoStateHook.shapeStrokeWidthInput}
+                  setShapeInputOnSubmit={shapeAnnoStateHook.setShapeInputOnSubmit}
+                  setShapeInputIsEdit={shapeAnnoStateHook.setShapeInputIsEdit}
+                  setShapeInputChange={shapeAnnoStateHook.setShapeInputChange}
+                  setShapeType={shapeAnnoStateHook.setShapeType}
+                  setShapeStrokeColor={shapeAnnoStateHook.setShapeStrokeColor}
+                  setShapeStrokeWidth={shapeAnnoStateHook.setShapeStrokeWidth}
+                  setShapeFillColor={shapeAnnoStateHook.setShapeFillColor}
+                  setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
+                  setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
+                  forSpecificAnnot={true}
+                  handleDeleteAnnotation={handleDeleteAnnotation}
+                />
+              )}
+            </div>
+          )}
+
+        {/* Controls Bar */}
+        <div className='flex items-center justify-center py-3 px-2 gap-2 bg-white border-t border-[#D9D9D9] h-fit'>
+          {/* Zoom Controls */}
+          <ZoomControls zoom={zoom} setZoom={handleSetZoom} isViewerReady={isViewerReady} />
+
+          {/* Page Navigation */}
+          <PaginantionControl
+            isViewerReady={isViewerReady}
+            instanceRef={instanceRef}
+            numPages={numPages}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            isEditingPage={isEditingPage}
+            setIsEditingPage={setIsEditingPage}
+            pageInput={pageInput}
+            setPageInput={setPageInput}
           />
         </div>
 
-        <div className='w-[1px] h-[18px] bg-[#DBDDE1]'></div>
+        {/* Annotation Control */}
+        <div className='absolute bottom-[92px] right-[49px] z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
+          {/* SHAPE ANNOTATION */}
+          <div className='flex'>
+            <button
+              className={cn(
+                'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+                selectedAnnotation === 'shape' && 'bg-[#D9D9D9]'
+              )}
+              onClick={() => {
+                if (selectedAnnotation === 'shape') {
+                  setSelectedAnnotation(null);
+                } else {
+                  setSelectedAnnotation('shape');
+                }
+              }}
+            >
+              <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
+              <span>Shape</span>
+            </button>
+            <ShapeAnnotControl
+              shapeState={shapeState}
+              shapeOpacityInput={shapeOpacityInput}
+              shapeStrokeWidthInput={shapeStrokeWidthInput}
+              setShapeInputOnSubmit={setShapeInputOnSubmit}
+              setShapeInputIsEdit={setShapeInputIsEdit}
+              setShapeInputChange={setShapeInputChange}
+              setShapeType={setShapeType}
+              setShapeStrokeColor={setShapeStrokeColor}
+              setShapeStrokeWidth={setShapeStrokeWidth}
+              setShapeFillColor={setShapeFillColor}
+              setShapeOpacity={setShapeOpacity}
+              setShapeRadioGroup={setShapeRadioGroup}
+            />
+          </div>
 
-        {/* TYPE ANNOTATION */}
-        <div className='flex'>
-          <button
-            className={cn(
-              'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
-              selectedAnnotation === 'text' && 'bg-[#D9D9D9]'
-            )}
-            onClick={() => {
-              if (selectedAnnotation === 'text') {
-                setSelectedAnnotation(null);
-              } else {
-                setSelectedAnnotation('text');
-              }
-            }}
-          >
-            <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
-            <span>Type</span>
-          </button>
-          <TextAnnotControl
-            textState={textState}
-            textOpacityInput={textOpacityInput}
-            textStrokeWidthInput={textStrokeWidthInput}
-            setTextInputOnSubmit={setTextInputOnSubmit}
-            setTextInputIsEdit={setTextInputIsEdit}
-            setTextInputChange={setTextInputChange}
-            setFontFamily={setFontFamily}
-            setFontSize={setFontSize}
-            setTextColor={setTextColor}
-            setTextStrokeColor={setTextStrokeColor}
-            setTextStrokeWidth={setTextStrokeWidth}
-            setTextOpacity={setTextOpacity}
-            setTextRadioGroup={setTextRadioGroup}
-            setTextFillColor={setTextFillColor}
-          />
+          <div className='w-[1px] h-[18px] bg-[#DBDDE1]'></div>
+
+          {/* TYPE ANNOTATION */}
+          <div className='flex'>
+            <button
+              className={cn(
+                'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+                selectedAnnotation === 'text' && 'bg-[#D9D9D9]'
+              )}
+              onClick={() => {
+                if (selectedAnnotation === 'text') {
+                  setSelectedAnnotation(null);
+                } else {
+                  setSelectedAnnotation('text');
+                }
+              }}
+            >
+              <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
+              <span>Type</span>
+            </button>
+            <TextAnnotControl
+              textState={textState}
+              textOpacityInput={textOpacityInput}
+              textStrokeWidthInput={textStrokeWidthInput}
+              setTextInputOnSubmit={setTextInputOnSubmit}
+              setTextInputIsEdit={setTextInputIsEdit}
+              setTextInputChange={setTextInputChange}
+              setFontFamily={setFontFamily}
+              setFontSize={setFontSize}
+              setTextColor={setTextColor}
+              setTextStrokeColor={setTextStrokeColor}
+              setTextStrokeWidth={setTextStrokeWidth}
+              setTextOpacity={setTextOpacity}
+              setTextRadioGroup={setTextRadioGroup}
+              setTextFillColor={setTextFillColor}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,18 +1,19 @@
 'use client';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Download, Share } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import type { FileMetadata } from '@/types/types';
 import WebViewer from '@/components/pdf-viewer/WebViewer';
+import { useSession } from 'next-auth/react';
+import ShareDialog from '@/components/ShareDialog';
 
 const DocPage = () => {
+  const { data: session } = useSession();
+
   const { id } = useParams();
   const [doc, setDoc] = useState<FileMetadata | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
-  // zoom state
-  const router = useRouter();
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   // Fetch document data
   useEffect(() => {
@@ -36,27 +37,17 @@ const DocPage = () => {
     fetchDoc();
   }, [id]);
   return (
-    <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center'>
-          <div className='p-5 mr-3'>
-            <ArrowLeft className='h-5 w-5 cursor-pointer' onClick={() => router.back()} />
-          </div>
-          <p className='font-semibold text-2xl'>{doc?.name}</p>
-        </div>
-        <div className='flex items-center gap-3'>
-          <Button variant='outline' className='w-fit bg-[#E3E3E3] border-[#767676]'>
-            <Download className='mr-2 h-4 w-4' />
-            Download
-          </Button>
-          <Button variant='outline' className='w-fit bg-[#E3E3E3] border-[#767676]'>
-            <Share className='mr-2 h-4 w-4' />
-            Share
-          </Button>
-        </div>
+    <>
+      <ShareDialog isOpen={isShareDialogOpen} docData={doc} />
+      <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
+        <WebViewer
+          initialDoc={url}
+          docData={doc}
+          session={session}
+          handleOpenShareDialog={() => setIsShareDialogOpen(true)}
+        />
       </div>
-      <WebViewer initialDoc={url!} />
-    </div>
+    </>
   );
 };
 
