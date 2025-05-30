@@ -26,6 +26,7 @@ interface ShapeAnnotControlProps {
   setShapeOpacity: ReturnType<typeof useShapeAnnotationState>['setShapeOpacity'];
   setShapeRadioGroup: ReturnType<typeof useShapeAnnotationState>['setShapeRadioGroup'];
   forSpecificAnnot?: boolean;
+  handleDeleteAnnotation?: () => void;
 }
 const ShapeAnnotControl = ({
   shapeState,
@@ -41,6 +42,7 @@ const ShapeAnnotControl = ({
   setShapeOpacity,
   setShapeRadioGroup,
   forSpecificAnnot = false,
+  handleDeleteAnnotation,
 }: ShapeAnnotControlProps) => {
   return (
     <DropdownMenu defaultOpen={forSpecificAnnot}>
@@ -49,10 +51,10 @@ const ShapeAnnotControl = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='my-3 bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg p-4'
+        className='my-3 bg-[#F5F5F5] border-[1px] border-[#D9D9D9] pt-4 shadow-md w-[324px] rounded-lg'
       >
         <div>
-          <div className='flex flex-col gap-4'>
+          <div className='flex flex-col gap-4 px-4 pb-4'>
             {!forSpecificAnnot && (
               <div className='flex flex-col gap-2'>
                 <p className='text-sm'>Shape</p>
@@ -328,6 +330,17 @@ const ShapeAnnotControl = ({
               </div>
             </div>
           </div>
+          {forSpecificAnnot && (
+            <div>
+              <button
+                onClick={handleDeleteAnnotation}
+                className='flex items-center gap-2 px-4 bg-white w-full'
+              >
+                <Image src='/icons/md_trash-bin.svg' alt='delete' width={16} height={16} />
+                <p className='text-[#900B09] py-[12px]'>Delete</p>
+              </button>
+            </div>
+          )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

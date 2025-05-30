@@ -28,7 +28,8 @@ interface TextAnnotControlProps {
   setTextOpacity: ReturnType<typeof useTextAnnotationState>['setTextOpacity'];
   setTextRadioGroup: ReturnType<typeof useTextAnnotationState>['setTextRadioGroup'];
   setTextFillColor: ReturnType<typeof useTextAnnotationState>['setTextFillColor'];
-  forSpecificAnnot?: boolean; // This prop is not used in the current implementation but can be used for future enhancements
+  forSpecificAnnot?: boolean;
+  handleDeleteAnnotation?: () => void;
 }
 
 const TextAnnotControl = ({
@@ -46,7 +47,8 @@ const TextAnnotControl = ({
   setTextOpacity,
   setTextRadioGroup,
   setTextFillColor,
-  forSpecificAnnot = false, // This prop is not used in the current implementation but can be used for future enhancements
+  forSpecificAnnot = false,
+  handleDeleteAnnotation,
 }: TextAnnotControlProps) => {
   return (
     <DropdownMenu defaultOpen={forSpecificAnnot}>
@@ -55,11 +57,11 @@ const TextAnnotControl = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align='end'
-        className='my-3 bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg p-4'
+        className='my-3 bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg pt-4 overflow-hidden'
       >
         <div>
           <div className='flex flex-col gap-4'>
-            <div className='flex flex-col gap-2'>
+            <div className='flex flex-col gap-2 px-4'>
               <p className='text-sm'>Text style</p>
               <div className='flex gap-2'>
                 <div className='flex-1 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center overflow-hidden'>
@@ -141,7 +143,7 @@ const TextAnnotControl = ({
                 ))}
               </div>
             </div>
-            <div className='flex flex-col gap-4'>
+            <div className={cn('flex flex-col gap-4 px-4', !forSpecificAnnot && 'pb-4')}>
               <div className='flex flex-col gap-2'>
                 <p className='text-sm'>Frame style</p>
                 {/* radio group */}
@@ -325,6 +327,17 @@ const TextAnnotControl = ({
                 </div>
               </div>
             </div>
+            {forSpecificAnnot && (
+              <div>
+                <button
+                  onClick={handleDeleteAnnotation}
+                  className='flex items-center gap-2 px-4 bg-white w-full'
+                >
+                  <Image src='/icons/md_trash-bin.svg' alt='delete' width={16} height={16} />
+                  <p className='text-[#900B09] py-[12px]'>Delete</p>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </DropdownMenuContent>

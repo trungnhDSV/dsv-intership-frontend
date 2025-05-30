@@ -12,6 +12,7 @@ interface PaginantionControlProps {
   setIsEditingPage: React.Dispatch<React.SetStateAction<boolean>>;
   pageInput: string;
   setPageInput: React.Dispatch<React.SetStateAction<string>>;
+  isViewerReady: boolean;
 }
 
 const PaginantionControl = ({
@@ -23,6 +24,7 @@ const PaginantionControl = ({
   setIsEditingPage,
   pageInput,
   setPageInput,
+  isViewerReady,
 }: PaginantionControlProps) => {
   // Navigation functions
   const setPage = (page: number) => {
@@ -96,7 +98,7 @@ const PaginantionControl = ({
       <Button
         variant='ghost'
         onClick={goToFirstPage}
-        disabled={currentPage <= 1}
+        disabled={currentPage <= 1 || !isViewerReady}
         className='p-2'
         aria-label='First page'
       >
@@ -105,7 +107,7 @@ const PaginantionControl = ({
       <Button
         variant='ghost'
         onClick={goToPreviousPage}
-        disabled={currentPage <= 1}
+        disabled={currentPage <= 1 || !isViewerReady}
         className='p-2'
         aria-label='Previous page'
       >
@@ -117,7 +119,10 @@ const PaginantionControl = ({
         <Button
           variant='ghost'
           className='w-16 border-r-none rounded-none p-0'
-          onDoubleClick={() => setIsEditingPage(true)}
+          onDoubleClick={() => {
+            if (!isViewerReady) return;
+            setIsEditingPage(true);
+          }}
         >
           {isEditingPage ? (
             <input
@@ -141,7 +146,7 @@ const PaginantionControl = ({
       <Button
         variant='ghost'
         onClick={goToNextPage}
-        disabled={!numPages || currentPage >= numPages}
+        disabled={!numPages || currentPage >= numPages || !isViewerReady}
         className='p-2'
         aria-label='Next page'
       >
@@ -150,7 +155,7 @@ const PaginantionControl = ({
       <Button
         variant='ghost'
         onClick={goToLastPage}
-        disabled={!numPages || currentPage >= numPages}
+        disabled={!numPages || currentPage >= numPages || !isViewerReady}
         className='p-2'
         aria-label='Last page'
       >

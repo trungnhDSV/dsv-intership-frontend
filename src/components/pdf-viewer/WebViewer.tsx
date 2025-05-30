@@ -3,7 +3,7 @@ import PaginantionControl from '@/components/pdf-viewer/PaginantionControl';
 import { ZoomControls } from '@/components/pdf-viewer/ZoomControl';
 import { Core, WebViewerInstance } from '@pdftron/webviewer';
 import Image from 'next/image';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import TextAnnotControl from './TextAnnotControl';
 import ShapeAnnotControl from './ShapeAnnotControl';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,8 @@ import {
   extractShapeState,
   getToolNameFromShapeType,
   ShapeAnnotations,
+  updateFreeTextAnnotationFields,
+  updateShapeAnnotationFields,
 } from '@/lib/annotations/annotationStyle';
 import { TextAnnoInitState, ShapeAnnoInitState } from '@/constants/annotations';
 
@@ -30,7 +32,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isEditingPage, setIsEditingPage] = useState<boolean>(false);
   const [pageInput, setPageInput] = useState<string>('1');
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState<number>(1);
 
   // ANNOTATION
   const [selectedAnnotation, setSelectedAnnotation] = useState<'shape' | 'text' | null>(null);
@@ -52,7 +54,6 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     // setText,
     // resetText,
   } = useTextAnnotationState(TextAnnoInitState);
-
   const {
     shapeState,
     shapeOpacityInput,
@@ -87,13 +88,15 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     y: 0,
     annotation: null,
   });
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let webViewerInstance: WebViewerInstance;
     const initializeWebViewer = async () => {
       try {
         if (!viewer.current || !initialDoc) return;
-
+        if (!process.env.NEXT_PUBLIC_PDFTRON_LICENSE_KEY)
+          throw new Error('PDFTron license key is not set in environment variables');
         const { default: WebViewer } = await import('@pdftron/webviewer');
 
         webViewerInstance = await WebViewer(
@@ -153,53 +156,35 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
 
           annotManager.addEventListener(
             'annotationSelected',
-            (annots: Core.Annotations.FreeTextAnnotation[]) => {
-              if (annots.length === 0) {
-                setPopupData({ visible: false, x: 0, y: 0, annotation: null });
-                return;
-              }
-
-              const annot = annots[0];
-
-              const annotRect = annot.getRect(); // PDF Coordinates, x1, y1: Top left ,x2, y2: Bottom right
-              if (!annotRect) {
-                console.warn('Annotation has no valid rectangle');
-                return;
-              }
-
-              const scrollEl = webViewerInstance.Core.documentViewer.getScrollViewElement();
-              const scrollLeft = scrollEl?.scrollLeft || 0;
-              const scrollTop = scrollEl?.scrollTop || 0;
-              console.log('SCROLL ELEMENT:', scrollLeft, scrollTop);
-              console.log('ANNOTATION RECT:', (annotRect.x1 + annotRect.x2) / 2);
-              const pagePoint = {
-                x: annotRect.x2,
-                y: annotRect.y2,
-              };
-              const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
-              const windowPoint = displayMode.pageToWindow(pagePoint, currentPage);
-              // windowPoint.y += 60 + 24 + 64;
-              // 60px for header, 24px for pt, 64px for controls
-
-              setPopupData({
-                visible: true,
-                x: windowPoint.x,
-                y: windowPoint.y + scrollTop,
-                annotation: annot,
-              });
-            }
-          );
-          annotManager.addEventListener(
-            'annotationSelected',
             function (annotations: Core.Annotations.FreeTextAnnotation[] | ShapeAnnotations[]) {
               if (annotations.length === 1) {
                 const annotation = annotations[0];
-                console.log('SELECTED ANNOTATION:', annotation);
-                setPopupData((prev) => ({
-                  ...prev,
+
+                const annotRect = annotation.getRect(); // PDF Coordinates, x1, y1: Top left ,x2, y2: Bottom right
+                if (!annotRect) {
+                  console.warn('Annotation has no valid rectangle');
+                  return;
+                }
+
+                const scrollEl = webViewerInstance.Core.documentViewer.getScrollViewElement();
+                const scrollLeft = scrollEl?.scrollLeft || 0;
+                const scrollTop = scrollEl?.scrollTop || 0;
+                // console.log('SCROLL ELEMENT:', scrollLeft, scrollTop);
+                const pagePoint = {
+                  x: annotRect.x2,
+                  y: annotRect.y2,
+                };
+                const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
+                const windowPoint = displayMode.pageToWindow(pagePoint, currentPage);
+                // windowPoint.y += 60 + 24 + 64;
+                // 60px for header, 24px for pt, 64px for controls
+
+                setPopupData({
                   visible: true,
-                  annotation,
-                }));
+                  x: windowPoint.x - scrollLeft,
+                  y: windowPoint.y - scrollTop,
+                  annotation: annotation,
+                });
                 setSelectedSpecificAnnot(annotation);
                 // Update text state from selected annotation
                 if (annotation.Subject === 'Free Text') {
@@ -225,6 +210,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
                   shapeAnnoStateHook.setShapeRadioGroup(shapeType.radioGroup);
                 }
               } else {
+                console.log('Multiple annotations selected, hiding popup');
                 setPopupData((prev) => ({
                   ...prev,
                   visible: false,
@@ -233,14 +219,6 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
               }
             }
           );
-
-          annotManager.addEventListener('annotationDeselected', () => {
-            setPopupData((prev) => ({
-              ...prev,
-              visible: false,
-              annotation: null,
-            }));
-          });
         });
         documentViewer.addEventListener('zoomUpdated', (zoomLevel) => {
           setZoom(zoomLevel);
@@ -338,68 +316,86 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
     if (!selectedSpecificAnnot || !instanceRef.current) return;
 
     const { Core } = instanceRef.current;
+    let needRedraw = false;
 
     if (selectedSpecificAnnot instanceof Core.Annotations.FreeTextAnnotation) {
-      const { textState } = textAnnoStateHook;
-
-      selectedSpecificAnnot.FontSize = textState.fontSize.toString();
-      selectedSpecificAnnot.Font = textState.fontFamily;
-      if (textState.textColor) {
-        selectedSpecificAnnot.TextColor = new Core.Annotations.Color(
-          textState.textColor.r,
-          textState.textColor.g,
-          textState.textColor.b
-        );
-      }
-      selectedSpecificAnnot.StrokeThickness = textState.strokeWidth;
-      selectedSpecificAnnot.StrokeColor = new Core.Annotations.Color(
-        textState.strokeColor?.r ?? 255,
-        textState.strokeColor?.g ?? 255,
-        textState.strokeColor?.b ?? 255,
-        textState.strokeColor ? 1 : 0 // Set alpha to 1 if stroke color is set, otherwise 0
+      needRedraw = updateFreeTextAnnotationFields(
+        selectedSpecificAnnot,
+        textAnnoStateHook.textState,
+        Core
       );
-      selectedSpecificAnnot.FillColor = new Core.Annotations.Color(
-        textState.fillColor?.r ?? 255,
-        textState.fillColor?.g ?? 255,
-        textState.fillColor?.b ?? 255,
-        textState.fillColor ? 1 : 0 // Set alpha to 1 if fill color is set, otherwise 0
-      );
-
-      selectedSpecificAnnot.Opacity = textState.opacity;
     } else {
-      const { shapeState } = shapeAnnoStateHook;
-      selectedSpecificAnnot.StrokeThickness = shapeState.strokeWidth;
-      selectedSpecificAnnot.StrokeColor = new Core.Annotations.Color(
-        shapeState.strokeColor?.r ?? 255,
-        shapeState.strokeColor?.g ?? 255,
-        shapeState.strokeColor?.b ?? 255,
-        shapeState.strokeColor ? 1 : 0 // Set alpha to 1 if stroke color is set, otherwise 0
+      needRedraw = updateShapeAnnotationFields(
+        selectedSpecificAnnot,
+        shapeAnnoStateHook.shapeState,
+        Core
       );
-      selectedSpecificAnnot.FillColor = new Core.Annotations.Color(
-        shapeState.fillColor?.r ?? 255,
-        shapeState.fillColor?.g ?? 255,
-        shapeState.fillColor?.b ?? 255,
-        shapeState.fillColor?.a === 0 ? 0 : shapeState.fillColor?.a // Set alpha to 1 if fill color is set, otherwise 0
-      );
-      selectedSpecificAnnot.Opacity = shapeState.opacity;
     }
 
-    console.log(selectedSpecificAnnot);
     // Redraw annotation
-    const annotManager = Core.documentViewer.getAnnotationManager();
-    annotManager.redrawAnnotation(selectedSpecificAnnot);
+    if (needRedraw) {
+      if (selectedSpecificAnnot instanceof Core.Annotations.FreeTextAnnotation)
+        Core.annotationManager.trigger('annotationChanged', [
+          [selectedSpecificAnnot],
+          'modify',
+          {},
+        ]);
+      else Core.documentViewer.getAnnotationManager().redrawAnnotation(selectedSpecificAnnot);
+    }
   }, [
     textAnnoStateHook.textState,
     selectedSpecificAnnot,
     shapeAnnoStateHook.shapeState,
     instanceRef.current,
   ]);
-  console.log(
-    popupData.visible,
-    isViewerReady,
-    selectedSpecificAnnot,
-    selectedSpecificAnnot?.Subject === 'Free Text'
-  );
+
+  useEffect(() => {
+    if (!isViewerReady || !instanceRef.current) return;
+
+    const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
+    const { Annotations, documentViewer } = instanceRef.current.Core;
+
+    const handleAnnotationChanged = (
+      annotations: Core.Annotations.Annotation[],
+      action: string
+    ) => {
+      console.log('Listening to annotation changes:', action, annotations);
+      annotations.forEach((annotation) => {
+        if (annotation instanceof Annotations.FreeTextAnnotation) {
+          if (action === 'add' || action === 'modify') {
+            const doc = documentViewer.getDocument();
+            const pageNumber = annotation.getPageNumber();
+            const pageInfo = doc.getPageInfo(pageNumber);
+            const pageMatrix = doc.getPageMatrix(pageNumber);
+            const pageRotation = doc.getPageRotation(pageNumber);
+            annotation.fitText(pageInfo, pageMatrix, pageRotation);
+            annotManager.redrawAnnotation(annotation);
+          }
+        }
+      });
+    };
+
+    annotManager.addEventListener('annotationChanged', handleAnnotationChanged);
+
+    return () => {
+      annotManager.removeEventListener('annotationChanged', handleAnnotationChanged);
+    };
+  }, [isViewerReady, instanceRef.current]);
+
+  const handleDeleteAnnotation = () => {
+    if (!instanceRef.current) return;
+    const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
+    const selectedAnnots = annotManager.getSelectedAnnotations();
+    if (selectedAnnots.length === 1) {
+      annotManager.deleteAnnotations(selectedAnnots);
+      setPopupData((prev) => ({
+        ...prev,
+        visible: false,
+        annotation: null,
+      }));
+      setSelectedSpecificAnnot(null);
+    }
+  };
 
   return (
     <div className='flex-1 flex flex-col rounded-2xl overflow-hidden border-[1px] border-[#D9D9D9] relative'>
@@ -410,10 +406,8 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
           style={{ height: '100%' }}
           onMouseDown={() => {
             if (!viewer.current || !instanceRef.current) return;
-            const { documentViewer } = instanceRef.current.Core;
-            const annotManager = documentViewer.getAnnotationManager();
+            const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
             const selectedAnnots = annotManager.getSelectedAnnotations();
-
             if (selectedAnnots.length === 0) {
               // Người dùng click nền (viewer), không phải annotation
               console.log('Clicked on empty viewer');
@@ -434,6 +428,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
         selectedSpecificAnnot.Subject && (
           <div
             className='absolute z-10050'
+            ref={popupRef}
             style={{
               top: popupData.y,
               left: popupData.x,
@@ -456,6 +451,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
                 setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
                 setTextFillColor={textAnnoStateHook.setTextFillColor}
                 forSpecificAnnot={true}
+                handleDeleteAnnotation={handleDeleteAnnotation}
               />
             ) : (
               <ShapeAnnotControl
@@ -472,6 +468,7 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
                 setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
                 setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
                 forSpecificAnnot={true}
+                handleDeleteAnnotation={handleDeleteAnnotation}
               />
             )}
           </div>
@@ -480,10 +477,11 @@ export default function WebViewer({ initialDoc }: WebViewerProps) {
       {/* Controls Bar */}
       <div className='flex items-center justify-center py-3 px-2 gap-2 bg-white border-t border-[#D9D9D9] h-fit'>
         {/* Zoom Controls */}
-        <ZoomControls zoom={zoom} setZoom={handleSetZoom} />
+        <ZoomControls zoom={zoom} setZoom={handleSetZoom} isViewerReady={isViewerReady} />
 
         {/* Page Navigation */}
         <PaginantionControl
+          isViewerReady={isViewerReady}
           instanceRef={instanceRef}
           numPages={numPages}
           currentPage={currentPage}

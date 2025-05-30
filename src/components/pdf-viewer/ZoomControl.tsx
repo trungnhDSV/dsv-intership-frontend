@@ -18,9 +18,11 @@ const MAX_ZOOM = 2;
 export const ZoomControls = ({
   zoom,
   setZoom,
+  isViewerReady,
 }: {
   zoom: number;
   setZoom: (zoom: number) => void;
+  isViewerReady: boolean;
 }) => {
   const [isEditingZoom, setIsEditingZoom] = useState(false);
   const [zoomInput, setZoomInput] = useState(String(Math.round(zoom * 100)));
@@ -67,7 +69,7 @@ export const ZoomControls = ({
       <Button
         variant='ghost'
         onClick={zoomOut}
-        disabled={zoom <= MIN_ZOOM}
+        disabled={zoom <= MIN_ZOOM || !isViewerReady}
         className='p-2'
         aria-label='Zoom out'
       >
@@ -84,7 +86,10 @@ export const ZoomControls = ({
         <Button
           variant='ghost'
           className='w-16 border-r-none rounded-none p-0'
-          onDoubleClick={() => setIsEditingZoom(true)}
+          onDoubleClick={() => {
+            if (!isViewerReady) return;
+            setIsEditingZoom(true);
+          }}
         >
           {isEditingZoom ? (
             <input
@@ -106,7 +111,11 @@ export const ZoomControls = ({
         {/* Dropdown trigger */}
         <DropdownMenu onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='px-2 rounded-none' disabled={isEditingZoom}>
+            <Button
+              variant='ghost'
+              className='px-2 rounded-none'
+              disabled={isEditingZoom || !isViewerReady}
+            >
               {dropdownOpen ? (
                 <ChevronUp className='h-4 w-4' />
               ) : (
@@ -138,7 +147,7 @@ export const ZoomControls = ({
       <Button
         variant='ghost'
         onClick={zoomIn}
-        disabled={zoom >= MAX_ZOOM}
+        disabled={zoom >= MAX_ZOOM || !isViewerReady}
         className='p-2'
         aria-label='Zoom in'
       >
