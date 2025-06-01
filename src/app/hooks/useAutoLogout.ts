@@ -1,31 +1,36 @@
-import { useEffect, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+// useAutoLogout
 
-export function useAutoLogout(inactivityTime = 30 * 60 * 1000) {
+import { useEffect } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { jwtDecode } from 'jwt-decode';
+import { showErrorToast } from '@/components/CustomToast';
+
+export function useAutoLogout() {
   const { data: session } = useSession();
-  const timer = useRef<NodeJS.Timeout>(null);
 
   useEffect(() => {
     if (!session?.accessToken) return;
-    console.log('Session exists, setting up auto logout');
 
-    const resetTimer = () => {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = setTimeout(() => {
-        console.warn('⏱️ No activity for 30 mins, logging out');
-        signOut({ callbackUrl: '/sign-in' });
-      }, inactivityTime);
-    };
+    const payload = jwtDecode(session.accessToken);
+    if (!payload?.exp) return;
 
-    const events = ['mousemove', 'keydown', 'click', 'scroll'];
+    const now = Date.now() / 1000; // giây
+    const expiresIn = payload.exp - now;
 
-    events.forEach((event) => window.addEventListener(event, resetTimer));
+    if (expiresIn > 0) {
+      const timeout = setTimeout(() => {
+        signOut();
+      }, expiresIn * 1000);
 
-    resetTimer(); // start timer
-
-    return () => {
-      events.forEach((event) => window.removeEventListener(event, resetTimer));
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [session, inactivityTime]);
+      return () => clearTimeout(timeout);
+    } else {
+      // Token đã hết hạn, logout luôn
+      showErrorToast({
+        title: 'Your session has expired',
+        description: 'Please log in again',
+      });
+      signOut();
+    }
+    console.log(session?.accessToken);
+  }, [session?.accessToken]);
 }

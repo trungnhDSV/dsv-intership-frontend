@@ -6,6 +6,7 @@ import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UploadDialog } from '@/components/UploadDialog';
 import type { FileMetadata } from '@/types/types';
+import { Session } from 'next-auth';
 
 interface DocumentsResponse {
   data: {
@@ -41,7 +42,11 @@ const Documents = React.memo(({ data, currUser }: { data: FileMetadata[]; currUs
 
 Documents.displayName = 'Documents';
 
-const useDocuments = (userId?: string, initialSortOrder: 'asc' | 'desc' = 'desc') => {
+const useDocuments = (
+  userId: string | null | undefined,
+  session: Session | null,
+  initialSortOrder: 'asc' | 'desc' = 'desc'
+) => {
   const [state, setState] = useState({
     documents: [] as FileMetadata[],
     offset: 0,
@@ -66,7 +71,14 @@ const useDocuments = (userId?: string, initialSortOrder: 'asc' | 'desc' = 'desc'
       try {
         const currentOffset = reset ? 0 : state.offset;
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/documents?ownerId=${userId}&limit=${LIMIT}&offset=${currentOffset}&sortOrder=${sortOrder}`
+          `${process.env.NEXT_PUBLIC_API_URL}/documents?ownerId=${userId}&limit=${LIMIT}&offset=${currentOffset}&sortOrder=${sortOrder}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              authorization: `Bearer ${session?.accessToken || ''}`,
+            },
+          }
         );
 
         if (!res.ok) throw new Error('Failed to fetch documents');
@@ -169,7 +181,7 @@ const DocsPage = () => {
     setSortOrder,
     // Thêm hàm updateDocuments từ custom hook
     updateDocuments,
-  } = useDocuments(session?.user?.id);
+  } = useDocuments(session?.user?.id, session);
 
   const handleNewDocument = useCallback((newDoc: FileMetadata) => {
     updateDocuments((prev) => {

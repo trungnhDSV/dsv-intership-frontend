@@ -22,21 +22,16 @@ import { ArrowLeft, Download, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { FileMetadata } from '@/types/types';
-import { Session } from 'next-auth';
+import ShareDialog from '@/components/ShareDialog';
 
 interface WebViewerProps {
   initialDoc: string | null;
   docData: FileMetadata | null;
-  session: Session | null;
-  handleOpenShareDialog: () => void;
+  accessToken: string | undefined;
+  role: 'owner' | 'viewer' | 'editor' | null;
 }
 
-export default function WebViewer({
-  initialDoc,
-  docData,
-  session,
-  handleOpenShareDialog,
-}: WebViewerProps) {
+export default function WebViewer({ initialDoc, docData, accessToken, role }: WebViewerProps) {
   const router = useRouter();
 
   const viewer = useRef<HTMLDivElement>(null);
@@ -105,7 +100,11 @@ export default function WebViewer({
   });
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // share
+  // shareDialog state
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const handleOpenShareDialog = () => {
+    setIsShareDialogOpen(true);
+  };
 
   useEffect(() => {
     let webViewerInstance: WebViewerInstance;
@@ -175,17 +174,22 @@ export default function WebViewer({
           // 1. Gọi API lấy annotation XFDF từ backend
           try {
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/documents/${docData?.id}/annotations`
+              `${process.env.NEXT_PUBLIC_API_URL}/documents/${docData?.id}/annotations`,
+              {
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  authorization: `Bearer ${accessToken || ''}`,
+                },
+              }
             );
             const data = await res.json();
-            console.log('Fetched annotation data:', data.data.url);
             if (data.data.url) {
               // 2. Fetch content từ presigned url
               const xfdfRes = await fetch(data.data.url);
               const xfdfString = await xfdfRes.text();
 
               // 3. Import annotation vào WebViewer
-              console.log('Importing annotations:', xfdfString);
               await annotManager.importAnnotations(xfdfString);
 
               // Nếu muốn fit page/refresh có thể gọi:
@@ -195,10 +199,15 @@ export default function WebViewer({
             console.error('Failed to load annotation:', err);
           }
 
+          // handle for role viewer
+          if (role === 'viewer') {
+            annotManager.enableReadOnlyMode();
+          }
           // set page coordinates for popup annotation
           annotManager.addEventListener(
             'annotationSelected',
             function (annotations: Core.Annotations.FreeTextAnnotation[] | ShapeAnnotations[]) {
+              if (role === 'viewer') return; // Prevent popup in viewer mode
               if (annotations.length === 1) {
                 const annotation = annotations[0];
 
@@ -249,7 +258,6 @@ export default function WebViewer({
                   shapeAnnoStateHook.setShapeRadioGroup(shapeType.radioGroup);
                 }
               } else {
-                console.log('Multiple annotations selected, hiding popup');
                 setPopupData((prev) => ({
                   ...prev,
                   visible: false,
@@ -267,7 +275,7 @@ export default function WebViewer({
           console.error('PDF load error:', error);
         });
 
-        console.log('WebViewer initialized with document:', docData, initialDoc, session);
+        console.log('WebViewer initialized with document:', docData, initialDoc, accessToken);
       } catch (error) {
         console.error('Error initializing WebViewer:', error);
       }
@@ -275,19 +283,6 @@ export default function WebViewer({
 
     initializeWebViewer();
   }, [viewer.current, initialDoc]);
-
-  // Register custom annotation tools
-  useEffect(() => {
-    const init = async () => {
-      const { registerTriangleAnnotation } = await import('@/lib/annotations/TriangleTool');
-      if (instanceRef.current) {
-        registerTriangleAnnotation(instanceRef.current);
-      }
-    };
-    if (isViewerReady) {
-      init();
-    }
-  }, [isViewerReady]);
 
   // Update tool mode style when creating annotations
   useEffect(() => {
@@ -343,11 +338,11 @@ export default function WebViewer({
         instanceRef.current.UI.setToolMode('AnnotationEdit');
       }
     }
-  }, [instanceRef, selectedAnnotation, shapeState, textState, isViewerReady]);
+  }, [selectedAnnotation, shapeState, textState, isViewerReady]);
 
   // update UI for selected annotation
   useEffect(() => {
-    if (!selectedSpecificAnnot || !instanceRef.current) return;
+    if (!selectedSpecificAnnot || !instanceRef.current || !isViewerReady) return;
 
     const { Core } = instanceRef.current;
     let needRedraw = false;
@@ -368,19 +363,14 @@ export default function WebViewer({
 
     // Redraw annotation
     if (needRedraw) {
-      if (selectedSpecificAnnot instanceof Core.Annotations.FreeTextAnnotation)
-        Core.annotationManager.trigger('annotationChanged', [
-          [selectedSpecificAnnot],
-          'modify',
-          {},
-        ]);
-      else Core.documentViewer.getAnnotationManager().redrawAnnotation(selectedSpecificAnnot);
+      Core.annotationManager.trigger('annotationChanged', [[selectedSpecificAnnot], 'modify', {}]);
     }
   }, [
     textAnnoStateHook.textState,
     selectedSpecificAnnot,
     shapeAnnoStateHook.shapeState,
     instanceRef.current,
+    isViewerReady,
   ]);
 
   // handle auto-fit text when freetext annotation changes
@@ -394,7 +384,6 @@ export default function WebViewer({
       annotations: Core.Annotations.Annotation[],
       action: string
     ) => {
-      console.log('Listening to annotation changes:', action, annotations);
       annotations.forEach((annotation) => {
         if (annotation instanceof Annotations.FreeTextAnnotation) {
           if (action === 'add' || action === 'modify') {
@@ -406,7 +395,7 @@ export default function WebViewer({
             annotation.fitText(pageInfo, pageMatrix, pageRotation);
             annotManager.redrawAnnotation(annotation);
           }
-        }
+        } else documentViewer.getAnnotationManager().redrawAnnotation(annotation);
       });
     };
 
@@ -419,7 +408,7 @@ export default function WebViewer({
 
   // handle auto save when annotations change
   useEffect(() => {
-    if (!instanceRef.current) return;
+    if (!instanceRef.current || !accessToken || !isViewerReady) return;
 
     const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
     let saveTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -435,7 +424,10 @@ export default function WebViewer({
           `${process.env.NEXT_PUBLIC_API_URL}/documents/${docData?.id}/annotations`,
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              authorization: `Bearer ${accessToken || ''}`,
+            },
             body: JSON.stringify({ xfdf: xfdfString }),
           }
         );
@@ -443,42 +435,26 @@ export default function WebViewer({
           console.error('Failed to save annotations:', res.statusText);
           return;
         }
-        const data = await res.json();
-        console.log('Annotations saved successfully:', data);
-
-        // Bạn có thể set state "saved", "saving" tại đây nếu muốn feedback UI
-      }, 2000); // chỉ gọi API nếu 15s không có thao tác mới
+        console.log('Annotations saved successfully');
+      }, 2000); // chỉ gọi API nếu 2s không có thao tác mới
     };
 
     annotManager.addEventListener('annotationChanged', handleAnnotationChanged);
 
-    // Cleanup
     return () => {
       annotManager.removeEventListener('annotationChanged', handleAnnotationChanged);
       if (saveTimeout) clearTimeout(saveTimeout);
     };
-  }, [isViewerReady, docData]);
+  }, [isViewerReady, docData, accessToken, instanceRef.current]);
 
-  if (!docData || !initialDoc || !session) {
-    return (
-      <div className='flex items-center justify-center h-full'>
-        <p className='text-gray-500'>Loading document...</p>
-      </div>
-    );
+  if (!docData) {
+    return <div className='text-center text-gray-500'>Loading document...</div>;
   }
 
-  const handleDeleteAnnotation = () => {
-    if (!instanceRef.current) return;
-    const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
-    const selectedAnnots = annotManager.getSelectedAnnotations();
-    if (selectedAnnots.length === 1) {
-      annotManager.deleteAnnotations(selectedAnnots);
-      setPopupData((prev) => ({
-        ...prev,
-        visible: false,
-        annotation: null,
-      }));
-      setSelectedSpecificAnnot(null);
+  const handleSetZoom = (newZoom: number) => {
+    if (instanceRef.current) {
+      instanceRef.current.Core.documentViewer.zoomTo(newZoom);
+      setZoom(newZoom);
     }
   };
   const handleDownload = async () => {
@@ -511,21 +487,40 @@ export default function WebViewer({
       console.error('Download error:', error);
     }
   };
-  const handleSetZoom = (newZoom: number) => {
-    if (instanceRef.current) {
-      instanceRef.current.Core.documentViewer.zoomTo(newZoom);
-      setZoom(newZoom);
+  const handleDeleteAnnotation = () => {
+    if (!instanceRef.current) return;
+    const annotManager = instanceRef.current.Core.documentViewer.getAnnotationManager();
+    const selectedAnnots = annotManager.getSelectedAnnotations();
+    if (selectedAnnots.length === 1) {
+      annotManager.deleteAnnotations(selectedAnnots);
+      setPopupData((prev) => ({
+        ...prev,
+        visible: false,
+        annotation: null,
+      }));
+      setSelectedSpecificAnnot(null);
     }
   };
 
   return (
     <>
+      {role === 'owner' && (
+        <ShareDialog
+          isOpen={isShareDialogOpen}
+          handleClose={() => setIsShareDialogOpen(false)}
+          docData={docData}
+          accessToken={accessToken}
+        />
+      )}
       <div className='flex items-center justify-between'>
         <div className='flex items-center'>
           <div className='p-5 mr-3'>
             <ArrowLeft className='h-5 w-5 cursor-pointer' onClick={() => router.back()} />
           </div>
           <p className='font-semibold text-2xl'>{docData.name}</p>
+          {role && role !== 'owner' && (
+            <p className='border-l-[1px] mx-2 px-2 text-xs text-[#757575]'>{role}</p>
+          )}
         </div>
         <div className='flex items-center gap-3'>
           <Button
@@ -540,9 +535,9 @@ export default function WebViewer({
             variant='outline'
             className='w-fit bg-[#E3E3E3] border-[#767676]'
             onClick={() => {
-              console.log('Open share dialog');
               handleOpenShareDialog();
             }}
+            disabled={role === 'owner' ? false : true} // Disable share button for non-owners
           >
             <Share className='mr-2 h-4 w-4' />
             Share
@@ -561,7 +556,6 @@ export default function WebViewer({
               const selectedAnnots = annotManager.getSelectedAnnotations();
               if (selectedAnnots.length === 0) {
                 // Người dùng click nền (viewer), không phải annotation
-                console.log('Clicked on empty viewer');
                 if (popupData.visible && popupData.annotation) {
                   setPopupData((prev) => ({
                     ...prev,
@@ -645,79 +639,81 @@ export default function WebViewer({
         </div>
 
         {/* Annotation Control */}
-        <div className='absolute bottom-[92px] right-[49px] z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
-          {/* SHAPE ANNOTATION */}
-          <div className='flex'>
-            <button
-              className={cn(
-                'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
-                selectedAnnotation === 'shape' && 'bg-[#D9D9D9]'
-              )}
-              onClick={() => {
-                if (selectedAnnotation === 'shape') {
-                  setSelectedAnnotation(null);
-                } else {
-                  setSelectedAnnotation('shape');
-                }
-              }}
-            >
-              <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
-              <span>Shape</span>
-            </button>
-            <ShapeAnnotControl
-              shapeState={shapeState}
-              shapeOpacityInput={shapeOpacityInput}
-              shapeStrokeWidthInput={shapeStrokeWidthInput}
-              setShapeInputOnSubmit={setShapeInputOnSubmit}
-              setShapeInputIsEdit={setShapeInputIsEdit}
-              setShapeInputChange={setShapeInputChange}
-              setShapeType={setShapeType}
-              setShapeStrokeColor={setShapeStrokeColor}
-              setShapeStrokeWidth={setShapeStrokeWidth}
-              setShapeFillColor={setShapeFillColor}
-              setShapeOpacity={setShapeOpacity}
-              setShapeRadioGroup={setShapeRadioGroup}
-            />
-          </div>
+        {isViewerReady && role !== 'viewer' && (
+          <div className='absolute bottom-[92px] right-[49px] z-10 flex items-center bg-white py-[6px] px-2 rounded-lg shadow-md justify-center gap-1'>
+            {/* SHAPE ANNOTATION */}
+            <div className='flex'>
+              <button
+                className={cn(
+                  'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+                  selectedAnnotation === 'shape' && 'bg-[#D9D9D9]'
+                )}
+                onClick={() => {
+                  if (selectedAnnotation === 'shape') {
+                    setSelectedAnnotation(null);
+                  } else {
+                    setSelectedAnnotation('shape');
+                  }
+                }}
+              >
+                <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
+                <span>Shape</span>
+              </button>
+              <ShapeAnnotControl
+                shapeState={shapeState}
+                shapeOpacityInput={shapeOpacityInput}
+                shapeStrokeWidthInput={shapeStrokeWidthInput}
+                setShapeInputOnSubmit={setShapeInputOnSubmit}
+                setShapeInputIsEdit={setShapeInputIsEdit}
+                setShapeInputChange={setShapeInputChange}
+                setShapeType={setShapeType}
+                setShapeStrokeColor={setShapeStrokeColor}
+                setShapeStrokeWidth={setShapeStrokeWidth}
+                setShapeFillColor={setShapeFillColor}
+                setShapeOpacity={setShapeOpacity}
+                setShapeRadioGroup={setShapeRadioGroup}
+              />
+            </div>
 
-          <div className='w-[1px] h-[18px] bg-[#DBDDE1]'></div>
+            <div className='w-[1px] h-[18px] bg-[#DBDDE1]'></div>
 
-          {/* TYPE ANNOTATION */}
-          <div className='flex'>
-            <button
-              className={cn(
-                'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
-                selectedAnnotation === 'text' && 'bg-[#D9D9D9]'
-              )}
-              onClick={() => {
-                if (selectedAnnotation === 'text') {
-                  setSelectedAnnotation(null);
-                } else {
-                  setSelectedAnnotation('text');
-                }
-              }}
-            >
-              <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
-              <span>Type</span>
-            </button>
-            <TextAnnotControl
-              textState={textState}
-              textOpacityInput={textOpacityInput}
-              textStrokeWidthInput={textStrokeWidthInput}
-              setTextInputOnSubmit={setTextInputOnSubmit}
-              setTextInputIsEdit={setTextInputIsEdit}
-              setTextInputChange={setTextInputChange}
-              setFontFamily={setFontFamily}
-              setFontSize={setFontSize}
-              setTextColor={setTextColor}
-              setTextStrokeColor={setTextStrokeColor}
-              setTextStrokeWidth={setTextStrokeWidth}
-              setTextOpacity={setTextOpacity}
-              setTextRadioGroup={setTextRadioGroup}
-              setTextFillColor={setTextFillColor}
-            />
+            {/* TYPE ANNOTATION */}
+            <div className='flex'>
+              <button
+                className={cn(
+                  'flex gap-1 items-center text-sm h-[30px]  rounded-sm p-1',
+                  selectedAnnotation === 'text' && 'bg-[#D9D9D9]'
+                )}
+                onClick={() => {
+                  if (selectedAnnotation === 'text') {
+                    setSelectedAnnotation(null);
+                  } else {
+                    setSelectedAnnotation('text');
+                  }
+                }}
+              >
+                <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
+                <span>Type</span>
+              </button>
+              <TextAnnotControl
+                textState={textState}
+                textOpacityInput={textOpacityInput}
+                textStrokeWidthInput={textStrokeWidthInput}
+                setTextInputOnSubmit={setTextInputOnSubmit}
+                setTextInputIsEdit={setTextInputIsEdit}
+                setTextInputChange={setTextInputChange}
+                setFontFamily={setFontFamily}
+                setFontSize={setFontSize}
+                setTextColor={setTextColor}
+                setTextStrokeColor={setTextStrokeColor}
+                setTextStrokeWidth={setTextStrokeWidth}
+                setTextOpacity={setTextOpacity}
+                setTextRadioGroup={setTextRadioGroup}
+                setTextFillColor={setTextFillColor}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

@@ -69,7 +69,10 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     // Step 1: Request upload URL
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload-url`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.accessToken}`,
+      },
       body: JSON.stringify({
         fileName: file.name,
         fileType: file.type,
@@ -107,7 +110,10 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
         // Step 3: Save metadata to backend
         const metaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.accessToken}`,
+          },
           body: JSON.stringify({
             name: file.name,
             s3Key,

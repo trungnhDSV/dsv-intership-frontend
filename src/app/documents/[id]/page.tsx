@@ -1,10 +1,10 @@
 'use client';
 import { useParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import type { FileMetadata } from '@/types/types';
 import WebViewer from '@/components/pdf-viewer/WebViewer';
 import { useSession } from 'next-auth/react';
-import ShareDialog from '@/components/ShareDialog';
+import NotFound from '@/app/documents/[id]/NotFound';
 
 const DocPage = () => {
   const { data: session } = useSession();
@@ -12,40 +12,83 @@ const DocPage = () => {
   const { id } = useParams();
   const [doc, setDoc] = useState<FileMetadata | null>(null);
   const [url, setUrl] = useState<string | null>(null);
-
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-
+  const [role, setRole] = useState<'owner' | 'viewer' | 'editor' | null>('owner');
+  const [loading, setLoading] = useState(true);
   // Fetch document data
   useEffect(() => {
-    if (!id) return;
+    if (!id || !session) return;
     const fetchDoc = async () => {
       try {
-        const s3KeyRes = await fetch(process.env.NEXT_PUBLIC_API_URL + `/documents/${id}`);
+        setLoading(true);
+        const s3KeyRes = await fetch(process.env.NEXT_PUBLIC_API_URL + `/documents/${id}`, {
+          headers: {
+            Authorization: `Bearer ${session?.accessToken}`,
+          },
+        });
+        if (!s3KeyRes.ok) {
+          throw new Error('Failed to fetch document data');
+        }
         const docData = await s3KeyRes.json();
         setDoc(docData.data);
+        console.log('Document data:', docData.data);
+        setRole(() => {
+          console.log(
+            docData.data.ownerId.id,
+            session.user?.id,
+            docData.data.ownerId.id === session.user?.id
+          );
+          if (docData.data.ownerId.id === session.user?.id) {
+            return 'owner';
+          } else {
+            for (const member of docData.data.members) {
+              if (member.userId === session.user?.id) {
+                return member.role;
+              }
+            }
+          }
+          return null;
+        });
 
         const urlRes = await fetch(
-          process.env.NEXT_PUBLIC_API_URL + `/documents/presign?s3Key=${docData.data.s3Key}`
+          process.env.NEXT_PUBLIC_API_URL + `/documents/presign?s3Key=${docData.data.s3Key}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session?.accessToken}`,
+            },
+          }
         );
         const urlData = await urlRes.json();
         setUrl(urlData.data.url);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching document:', error);
+        setLoading(false);
       }
     };
 
     fetchDoc();
-  }, [id]);
+  }, [id, session?.accessToken]);
+
+  const memoWebViewer = useMemo(
+    () => (
+      <WebViewer initialDoc={url} docData={doc} accessToken={session?.accessToken} role={role} />
+    ),
+    [url, doc, session?.accessToken, role]
+  );
+
+  if (!loading && role === null) {
+    return (
+      <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
+        <NotFound email={session?.user?.email} />
+      </div>
+    );
+  }
+
   return (
     <>
-      <ShareDialog isOpen={isShareDialogOpen} docData={doc} />
+      {/* <ShareDialog isOpen={isShareDialogOpen} docData={doc} /> */}
       <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
-        <WebViewer
-          initialDoc={url}
-          docData={doc}
-          session={session}
-          handleOpenShareDialog={() => setIsShareDialogOpen(true)}
-        />
+        {memoWebViewer}
       </div>
     </>
   );
