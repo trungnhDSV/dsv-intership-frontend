@@ -1,0 +1,62 @@
+{
+  "fontList": [
+    {
+      "family": "EB Garamond",
+      "id": "ebgaramond",
+      "variants": {
+        "400": "EBGaramond-Regular"
+      }
+    },
+    {
+      "family": "Arimo",
+      "id": "arimo",
+      "variants": {
+        "400": "Arimo-Regular"
+      }
+    },
+    {
+      "family": "Inter",
+      "id": "inter",
+      "variants": {
+        "400": "Inter-Regular"
+      }
+    },
+    {
+      "family": "Lora",
+      "id": "lora",
+      "variants": {
+        "400": "Lora-Regular"
+      }
+    },
+    {
+      "family": "Merriweather",
+      "id": "merriweather",
+      "variants": {
+        "400": "Merriweather-Regular"
+      }
+    },
+    {
+      "family": "Montserrat",
+      "id": "montserrat",
+      "variants": {
+        "400": "Montserrat-Regular"
+      }
+    },
+    {
+      "family": "Noto Sans",
+      "id": "notosans",
+      "variants": {
+        "400": "NotoSans-Regular"
+      }
+    }
+  ],
+  "matchPatterns": [
+    { "target": "ebgaramond", "type": "All" },
+    { "target": "arimo", "type": "All" },
+    { "target": "inter", "type": "All" },
+    { "target": "lora", "type": "All" },
+    { "target": "merriweather", "type": "All" },
+    { "target": "montserrat", "type": "All" },
+    { "target": "notosans", "type": "All" }
+  ]
+}

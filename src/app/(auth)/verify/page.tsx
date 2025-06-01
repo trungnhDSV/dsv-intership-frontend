@@ -14,9 +14,7 @@ export default function VerifyPage() {
 
   const router = useRouter();
   const hasRunRef = useRef(false);
-  const [status, setStatus] = useState<'pending' | 'success' | 'error'>(
-    'pending'
-  );
+  const [status, setStatus] = useState<'pending' | 'success' | 'error'>('pending');
   useEffect(() => {
     const token = searchParams.get('token');
     if (!token || hasRunRef.current) return;
@@ -24,16 +22,13 @@ export default function VerifyPage() {
 
     const verifyEmail = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/verify`,
-          {
-            method: 'Post',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token }),
-          }
-        );
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify`, {
+          method: 'Post',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
         if (!res.ok) throw new Error('Token không hợp lệ');
         setStatus('success');
 

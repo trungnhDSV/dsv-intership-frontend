@@ -1,3 +1,5 @@
+// auth.ts
+
 import NextAuth from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Credentials from 'next-auth/providers/credentials';
@@ -111,16 +113,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const res = await fetch(`${API_URL}/auth/oauth-check`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: user.email, fullName: user.name }),
+            body: JSON.stringify({
+              email: user.email,
+              fullName: user.name,
+            }),
           });
 
           if (!res.ok) {
             const error = await res.json();
             throw new Error(error.message);
           }
+          const data = await res.json();
+          user.id = data.data.user.id;
+          user.token = data.data.token;
           return true;
         } catch (error) {
-          console.error('OAuth check failed:', error);
           return '/sign-in?error=email-exists';
         }
       }
@@ -137,7 +144,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }) {
       if (account && user) {
         if (account.provider === 'google') {
-          token.accessToken = account.access_token;
+          token.accessToken = user.token;
         } else token.accessToken = user.token;
         token.user = {
           id: user.id,
@@ -150,7 +157,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.user = token.user;
-
       return session;
     },
   },

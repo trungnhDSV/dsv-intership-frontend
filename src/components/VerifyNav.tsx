@@ -8,13 +8,7 @@ const VerifyNav = () => {
       className='w-full bg-white shadow-md flex items-center fixed'
       style={{ height: `${NavbarHeight}px` }}
     >
-      <Image
-        src={'/logo.png'}
-        width={100}
-        height={100}
-        alt='logo'
-        className='w-8 h-8 ml-6'
-      />
+      <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8 ml-6' />
     </nav>
   );
 };
