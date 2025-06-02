@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "email": "Email",
+    "emailPlaceholder": "Input email address",
+    "password": "Password",
+    "passwordPlaceholder": "Input password",
+    "rePassword": "Re-confirm password",
+    "rePasswordPlaceholder": "Re-confirm password",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Input full name",
+    "mandatoryField": "Mandatory field",
+    "invalidEmail": "Invalid email address",
+    "invalidPassword": "Password must be at least 8 characters long",
+    "invalidEmailOnly": "Invalid email",
+    "incorrectAuth": "Incorrect email or password",
+    "signInButton": "Sign in",
+    "signUpButton": "Sign up",
+    "haveAccount": "Do not have an account?",
+    "accept": "I accept all Terms of Service and Privacy Policy"
+  },
+  "verify": {
+    "verifyTitle": "Verify your email address",
+    "verifyDescription": "We've just sent a verification email to {email}. Please check your inbox",
+    "resend": "Resend Verification Link",
+    "notReceive": "Didn't receive an email?",
+    "wellDone": "Well done!!",
+    "successVerify": "You have verified your email successfully.",
+    "goToDocs": "Go to My Document"
+  },
+  "documents": {
+    "myDocuments": "My Documents",
+    "total": "Total {count}",
+    "fileName": "File name",
+    "owner": "Document owner",
+    "lastUpdated": "Last updated"
+  },
+  "home": {
+    "projectName": "DI-PDF",
+    "slogan": "A world where document collaboration is fast, fun and easy"
+  }
+}

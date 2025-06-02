@@ -18,6 +18,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       clientId: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          scope: 'openid email profile https://www.googleapis.com/auth/drive.readonly',
+        },
+      },
       profile(profile) {
         return {
           id: profile.sub,
@@ -110,6 +115,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         try {
+          console.log('Google sign-in callback:', account.access_token);
           const res = await fetch(`${API_URL}/auth/oauth-check`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -143,9 +149,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       account: unknown;
     }) {
       if (account && user) {
-        if (account.provider === 'google') {
-          token.accessToken = user.token;
-        } else token.accessToken = user.token;
+        if (account.provider === 'google' && account.access_token) {
+          token.googleAccessToken = account.access_token;
+        }
+        token.accessToken = user.token;
         token.user = {
           id: user.id,
           email: user.email,
@@ -156,6 +163,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken;
+      session.googleAccessToken = token.googleAccessToken;
       session.user = token.user;
       return session;
     },

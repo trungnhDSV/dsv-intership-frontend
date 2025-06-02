@@ -1,0 +1,45 @@
+{
+  "auth": {
+    "signIn": "Đăng nhập",
+    "signUp": "Đăng ký",
+    "continueWithGoogle": "Đăng nhập bằng Google",
+    "or": "hoặc",
+    "email": "Email",
+    "emailPlaceholder": "Nhập địa chỉ email",
+    "password": "Mật khẩu",
+    "passwordPlaceholder": "Nhập mật khẩu",
+    "rePassword": "Nhập lại mật khẩu",
+    "rePasswordPlaceholder": "Nhập lại mật khẩu",
+    "fullName": "Họ và tên",
+    "fullNamePlaceholder": "Nhập họ và tên",
+    "mandatoryField": "Trường bắt buộc",
+    "invalidEmail": "Email không hợp lệ",
+    "invalidPassword": "Mật khẩu tối thiểu 8 ký tự",
+    "invalidEmailOnly": "Email không hợp lệ",
+    "incorrectAuth": "Sai email hoặc mật khẩu",
+    "signInButton": "Đăng nhập",
+    "signUpButton": "Đăng ký",
+    "haveAccount": "Bạn chưa có tài khoản?",
+    "accept": "Tôi đồng ý với Điều khoản & Chính sách bảo mật"
+  },
+  "verify": {
+    "verifyTitle": "Xác minh địa chỉ email",
+    "verifyDescription": "Chúng tôi vừa gửi email xác thực tới {email}. Vui lòng kiểm tra hộp thư",
+    "resend": "Gửi lại liên kết xác minh",
+    "notReceive": "Chưa nhận được email?",
+    "wellDone": "Thành công!",
+    "successVerify": "Bạn đã xác minh email thành công.",
+    "goToDocs": "Đến trang tài liệu"
+  },
+  "documents": {
+    "myDocuments": "Tài liệu của tôi",
+    "total": "Tổng {count}",
+    "fileName": "Tên file",
+    "owner": "Người sở hữu",
+    "lastUpdated": "Cập nhật lần cuối"
+  },
+  "home": {
+    "projectName": "DI-PDF",
+    "slogan": "Nền tảng cộng tác tài liệu nhanh chóng, thú vị và dễ dàng"
+  }
+}

@@ -17,6 +17,12 @@ import { checkPdfPassword } from '@/lib/pdf-util';
 import { Session } from 'next-auth';
 import { toast } from 'sonner';
 import { FileMetadata } from '@/types/types';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@radix-ui/react-dropdown-menu';
 
 interface UploadDialogProps {
   session: Session | null;
@@ -30,10 +36,56 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Xử lý khi chọn file
-  const handleButtonClick = () => {
+  // handle trigger file input
+  const handleTriggerFileInput = () => {
     if (!fileInputRef.current) return;
     fileInputRef.current.click();
+  };
+
+  // handle upload with Google Drive
+  const handleGoogleDriveUpload = async () => {
+    // 1. Nhận access token của Google từ session NextAuth
+    const googleToken = session?.googleAccessToken; // Kiểm tra đúng property nhé!
+    if (!googleToken) {
+      showErrorToast({ title: 'Bạn cần đăng nhập Google!' });
+      return;
+    }
+
+    console.log('Google token:', googleToken);
+
+    // 2. Load Google Picker API
+    if (!window.google || !window.google.picker) {
+      showErrorToast({
+        title: 'Google Picker is not ready',
+        description: 'Please try again after a few seconds.',
+      });
+      return;
+    }
+
+    const view = new window.google.picker.DocsView().setMimeTypes('application/pdf');
+    const picker = new window.google.picker.PickerBuilder()
+      .addView(view)
+      .setOAuthToken(googleToken)
+      .setDeveloperKey(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+      .setCallback(async (data: any) => {
+        if (data.action === window.google.picker.Action.PICKED) {
+          const picked = data.docs[0];
+          // 3. Tải file từ Google Drive về (dùng fetch với access token)
+          const response = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${picked.id}?alt=media`,
+            {
+              headers: { Authorization: `Bearer ${googleToken}` },
+            }
+          );
+          const blob = await response.blob();
+          // 4. Tạo file từ blob (để reuse logic)
+          const file = new File([blob], picked.name, { type: blob.type });
+          // 5. Gọi lại handleUpload (reuse)
+          handleUpload(file);
+        }
+      })
+      .build();
+    picker.setVisible(true);
   };
 
   // Xử lý upload
@@ -148,28 +200,91 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   return (
     <>
       <div>
-        <input
-          id='fileUpload'
-          ref={fileInputRef}
-          type='file'
-          accept='application/pdf'
-          className='hidden'
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              console.log('START HANDLE UPLOAD');
-              handleUpload(file);
-            }
-            e.target.value = '';
-          }}
-        />
+        {session?.googleAccessToken ? (
+          <>
+            <DropdownMenu
+              dir='ltr'
 
-        <label htmlFor='fileUpload'>
-          <Button variant='primary' type='button' onClick={handleButtonClick}>
-            <Image src='/icon-upload.svg' alt='upload' width={16} height={16} className='mr-2' />
-            Upload Document
-          </Button>
-        </label>
+              //  open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}
+            >
+              <DropdownMenuTrigger asChild>
+                <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
+                  <Image
+                    src='/icon-upload.svg'
+                    alt='upload'
+                    width={16}
+                    height={16}
+                    className='mr-2'
+                  />
+                  Upload Document
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9] z-10000'>
+                <DropdownMenuItem
+                  className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
+                  onClick={handleTriggerFileInput}
+                >
+                  <input
+                    id='fileUpload'
+                    ref={fileInputRef}
+                    type='file'
+                    accept='application/pdf'
+                    className='hidden'
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        console.log('START HANDLE UPLOAD');
+                        handleUpload(file);
+                      }
+                      e.target.value = '';
+                    }}
+                  />
+
+                  <label htmlFor='fileUpload'>
+                    <button className='w-fit'>Upload with File</button>
+                  </label>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
+                  onClick={handleGoogleDriveUpload}
+                >
+                  <div className='w-fit'>Upload with Google Drive</div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        ) : (
+          <>
+            <input
+              id='fileUpload'
+              ref={fileInputRef}
+              type='file'
+              accept='application/pdf'
+              className='hidden'
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  console.log('START HANDLE UPLOAD');
+                  handleUpload(file);
+                }
+                e.target.value = '';
+              }}
+            />
+
+            <label htmlFor='fileUpload'>
+              <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
+                <Image
+                  src='/icon-upload.svg'
+                  alt='upload'
+                  width={16}
+                  height={16}
+                  className='mr-2'
+                />
+                Upload Document
+              </Button>
+            </label>
+          </>
+        )}
       </div>
       {/* Dialog hiển thị sau khi chọn file hợp lệ */}
       <Dialog open={isDialogOpen}>
