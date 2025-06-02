@@ -1,0 +1,161 @@
+[33mcommit 105bfab72319a9bb4008d6b6553cfdca598241fc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/advance[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Mon Jun 2 11:32:40 2025 +0700
+
+    implement upload file with gg drive
+
+[33mcommit a49a4e9036a03428081d5c7cc76851d293cbecd1[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sun Jun 1 20:25:23 2025 +0700
+
+    fix missing dependency
+
+[33mcommit d1fc24c5eaf361ab38adc45ff1be4323da321274[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sun Jun 1 20:20:25 2025 +0700
+
+    Update Readme.md
+
+[33mcommit ce2835f98b901e7d4d5f3257d8533db60be2f4ef[m
+Merge: 7c038dc 04964e9
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sun Jun 1 18:32:50 2025 +0700
+
+    Merge branch 'feature/sharing'
+
+[33mcommit 04964e988c6bc953c54a71f9dba8ba47ef9de125[m[33m ([m[1;31morigin/feature/sharing[m[33m, [m[1;32mfeature/sharing[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sun Jun 1 18:17:07 2025 +0700
+
+    stable version
+
+[33mcommit 4bd3e2b6f96330e22de47faaa3236e011b745f85[m
+Author: Hải Trung Nguyễn <danisnguyen124@gmail.com>
+Date:   Fri May 30 17:34:40 2025 +0700
+
+    On going sharing
+
+[33mcommit c8115a19f5d78cada88ee4bb81def97b57f5dff8[m[33m ([m[1;31morigin/feature/annotations[m[33m, [m[1;32mfeature/annotations[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Fri May 30 08:47:40 2025 +0700
+
+    fix auto adjust w and h for text annotations
+
+[33mcommit 0701f4f2a683bcc25bf133c5e8fdcbe89120ffa9[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Thu May 29 18:37:28 2025 +0700
+
+    done freetext font family
+
+[33mcommit 81c8e916d49ba8fa52e85eeded89fc86b3f7c715[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Wed May 28 22:43:43 2025 +0700
+
+    annotation pop up feature - still have UI bugs
+
+[33mcommit c9d0cac4717734e6643e300cdbce45d5b7456263[m
+Author: Hải Trung Nguyễn <danisnguyen124@gmail.com>
+Date:   Wed May 28 15:36:28 2025 +0700
+
+    fix styling annotations
+
+[33mcommit 8a0e3764b7ec10845a4f7f636db7f8cae7fa746d[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Tue May 27 08:07:01 2025 +0700
+
+    Shape Annotation Done
+
+[33mcommit 84af2eee7a060c3cce5db54d5cf250ffa50c8486[m[33m ([m[1;31morigin/feature/document-list[m[33m, [m[1;32mfeature/document-list[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 24 17:26:08 2025 +0700
+
+    change tech stack: pdftron/webviewer
+
+[33mcommit 393ebe4a232e4ab00f1f86f696ae05bdf9f2e23a[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 24 11:55:22 2025 +0700
+
+    Fix uploading file
+
+[33mcommit 71f60a17efb2e63e306e08719cf387b89d094cc1[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Thu May 22 00:15:53 2025 +0700
+
+    Implement lazy loading
+
+[33mcommit 7c038dc53c949a471515bf5724b962c9c385b124[m
+Merge: 122a26c b0d8826
+Author: trungnhDSV <trungnh@dgroup.co>
+Date:   Wed May 21 12:51:41 2025 +0700
+
+    Merge pull request #1 from trungnhDSV/feature/authentication-flow
+    
+    Implement Authentication Flow (Sign In, Sign Up, OAuth)
+
+[33mcommit b0d8826a088d1f0a52429a13fad2014c568bf784[m[33m ([m[1;31morigin/feature/authentication-flow[m[33m)[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Wed May 21 12:50:48 2025 +0700
+
+    chore: unify quote style per code review
+
+[33mcommit db669124ba550dc25fa110f13a4a731867097922[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Wed May 21 12:44:53 2025 +0700
+
+    Done uploading file and view, zoom and pdf pagination
+
+[33mcommit 696e7dc98f2e137d878dc94c7f0da8684ceacb78[m
+Author: Hải Trung Nguyễn <danisnguyen124@gmail.com>
+Date:   Mon May 19 20:13:46 2025 +0700
+
+    done list
+
+[33mcommit a113fcfc3bc38c32f4e431f4ac9b17410a78eaef[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Mon May 19 07:42:11 2025 +0700
+
+    Implement upload file to s3 with presigned URL
+
+[33mcommit 22afd012ac6079c5e198661a1216b0d3f14a8a8f[m
+Merge: 3aa0059 559d3cf
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 17 18:19:57 2025 +0700
+
+    merge new fix version from feature/authen-flow
+
+[33mcommit 559d3cf92f3e24a54ad1fd75eefc3fb7c64d54c2[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 17 18:14:24 2025 +0700
+
+    fix unexpected behaviour credentials login
+
+[33mcommit 3aa0059b513e8e86b445a436a665f823e89ab893[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 17 15:47:59 2025 +0700
+
+    WIP: Partial document list UI implementation
+
+[33mcommit 3d6bacc1fcfb48ade59f98aea958b88b5403f6de[m
+Merge: 398a690 3f437ee
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Sat May 17 14:05:02 2025 +0700
+
+    merge from feature/authentication-flow
+
+[33mcommit 398a690271ca0502d497d56c305c822b5b396e9d[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Fri May 16 23:25:19 2025 +0700
+
+    Reapply document list implementation
+
+[33mcommit 3f437ee7d7a36939c64312f131d63f6629c7803f[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Fri May 16 22:06:49 2025 +0700
+
+    Reapply authentication flow implementation
+
+[33mcommit 122a26c692b1958549ae3eacc7a34953b0ff35ef[m
+Author: haitrungng <danisnguyen124@gmail.com>
+Date:   Wed May 14 19:34:45 2025 +0700
+
+    Initialize master with README only

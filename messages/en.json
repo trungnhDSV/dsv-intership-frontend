@@ -33,13 +33,27 @@
   },
   "documents": {
     "myDocuments": "My Documents",
-    "total": "Total {count}",
+    "total": "Total",
     "fileName": "File name",
     "owner": "Document owner",
-    "lastUpdated": "Last updated"
+    "lastUpdated": "Last updated",
+    "noDocuments": "There are no documents found",
+    "loading": "Loading more documents...",
+    "you": "You"
   },
   "home": {
     "projectName": "DI-PDF",
     "slogan": "A world where document collaboration is fast, fun and easy"
+  },
+  "notFoundDoc": {
+    "tittle": "You don't have permission to access this file",
+    "desc": "You are signed in as",
+    "backToHome": "Back to my document"
+  },
+  "specificDoc": {
+    "download": "Download",
+    "share": "Share",
+    "shape": "Shape",
+    "type": "Type"
   }
 }

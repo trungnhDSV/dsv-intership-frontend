@@ -1,5 +1,5 @@
 'use client';
-import { columns } from '@/app/documents/column';
+import { columns } from '@/app/[locale]/documents/column';
 import { DataTable } from '@/components/data-table';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -7,6 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { UploadDialog } from '@/components/UploadDialog';
 import type { FileMetadata } from '@/types/types';
 import { Session } from 'next-auth';
+import { useTranslations } from 'next-intl';
 
 interface DocumentsResponse {
   data: {
@@ -25,20 +26,22 @@ function sortByDate(data: FileMetadata[], direction: 'asc' | 'desc') {
   });
 }
 
-const Documents = React.memo(({ data, currUser }: { data: FileMetadata[]; currUser: string }) => {
-  const processedData = useMemo(() => {
-    return data.map((doc) => ({
-      ...doc,
-      ownerName: doc.ownerName === currUser ? `${doc.ownerName} (You)` : doc.ownerName,
-    }));
-  }, [data, currUser]);
+const Documents = React.memo(
+  ({ data, currUser, t }: { data: FileMetadata[]; currUser: string; t: (x: string) => void }) => {
+    const processedData = useMemo(() => {
+      return data.map((doc) => ({
+        ...doc,
+        ownerName: doc.ownerName === currUser ? `${doc.ownerName} (${t('you')})` : doc.ownerName,
+      }));
+    }, [data, currUser]);
 
-  return (
-    <div className='flex-1'>
-      <DataTable<FileMetadata, unknown> columns={columns} data={processedData} />
-    </div>
-  );
-});
+    return (
+      <div className='flex-1'>
+        <DataTable<FileMetadata, unknown> columns={columns} data={processedData} />
+      </div>
+    );
+  }
+);
 
 Documents.displayName = 'Documents';
 
@@ -179,9 +182,9 @@ const DocsPage = () => {
     loadMore,
     sortOrder,
     setSortOrder,
-    // Thêm hàm updateDocuments từ custom hook
     updateDocuments,
   } = useDocuments(session?.user?.id, session);
+  const t = useTranslations('documents');
 
   const handleNewDocument = useCallback((newDoc: FileMetadata) => {
     updateDocuments((prev) => {
@@ -233,10 +236,10 @@ const DocsPage = () => {
     <div className='px-6 py-6 w-full flex flex-col h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] gap-6'>
       <div className='flex justify-between'>
         <div className='flex items-center'>
-          <p className='text-2xl font-semibold tracking-tight pr-3'>My Documents</p>
+          <p className='text-2xl font-semibold tracking-tight pr-3'>{t('myDocuments')}</p>
           {documents.length > 0 && (
             <div className='text-[#757575] text-sm pl-3 border-l-2 border-[#E3E8EF]'>
-              Total {documents.length}
+              {t('total')} {documents.length}
             </div>
           )}
         </div>
@@ -249,16 +252,17 @@ const DocsPage = () => {
             <Documents
               data={sortByDate(documents, sortOrder)}
               currUser={session?.user?.name || ''}
+              t={t}
             />
             {hasMore && <div ref={loaderRef} className='h-10' />}
-            {isLoading && <div className='p-4 text-center'>Loading more documents...</div>}
+            {isLoading && <div className='p-4 text-center'>{t('loading')}</div>}
           </div>
         ) : (
           <div className='flex-1 flex items-center justify-center'>
             <div className='w-fit h-full flex flex-col justify-center'>
               <div className='flex flex-col items-center justify-center gap-6 w-fit h-fit'>
                 <Image src='/files-empty.png' alt='empty' width={192} height={192} priority />
-                <p className='text-[#4B5565]'>There are no documents found</p>
+                <p className='text-[#4B5565]'>{t('noDocuments')}</p>
                 <UploadDialog session={session} onUploadSuccess={handleNewDocument} />
               </div>
             </div>

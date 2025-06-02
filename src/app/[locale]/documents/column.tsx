@@ -4,6 +4,7 @@ import { FileMetadata } from '@/types/types';
 import { Avatar, AvatarFallback } from '@radix-ui/react-avatar';
 import { ColumnDef } from '@tanstack/react-table';
 import { ArrowUpDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -12,13 +13,15 @@ export const columns: ColumnDef<FileMetadata>[] = [
   {
     accessorKey: 'name',
     header: () => {
-      return <span className='text-sm'>File name</span>;
+      const t = useTranslations('documents');
+      return <span className='text-sm'>{t('fileName')}</span>;
     },
   },
   {
     accessorKey: 'ownerName',
     header: () => {
-      return <span className='text-sm'>Document owner</span>;
+      const t = useTranslations('documents');
+      return <span className='text-sm'>{t('owner')}</span>;
     },
     cell: ({ row }) => {
       return (
@@ -43,9 +46,10 @@ export const columns: ColumnDef<FileMetadata>[] = [
     accessorKey: 'uploadedAt',
 
     header: ({ column }) => {
+      const t = useTranslations('documents');
       return (
         <div className='flex w-fit text-sm'>
-          Last updated
+          {t('lastUpdated')}
           <button
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className='cursor-pointer'

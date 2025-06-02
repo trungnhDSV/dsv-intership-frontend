@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useActionState, useEffect, useRef } from 'react';
-import { signInAction } from '../../../lib/actions/auth';
+import { signInAction } from '../../../../lib/actions/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 

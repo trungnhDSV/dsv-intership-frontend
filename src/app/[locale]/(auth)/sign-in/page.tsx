@@ -1,5 +1,5 @@
 'use client';
-import SignInForm from '@/app/(auth)/sign-in/SignInForm';
+import SignInForm from '@/app/[locale]/(auth)/sign-in/SignInForm';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';

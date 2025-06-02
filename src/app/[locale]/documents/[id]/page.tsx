@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { FileMetadata } from '@/types/types';
 import WebViewer from '@/components/pdf-viewer/WebViewer';
 import { useSession } from 'next-auth/react';
-import NotFound from '@/app/documents/[id]/NotFound';
+import NotFound from '@/app/[locale]/documents/[id]/NotFound';
 
 const DocPage = () => {
   const { data: session } = useSession();

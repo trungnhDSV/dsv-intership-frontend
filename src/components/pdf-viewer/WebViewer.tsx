@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { FileMetadata } from '@/types/types';
 import ShareDialog from '@/components/ShareDialog';
+import { useTranslations } from 'next-intl';
 
 interface WebViewerProps {
   initialDoc: string | null;
@@ -32,6 +33,7 @@ interface WebViewerProps {
 }
 
 export default function WebViewer({ initialDoc, docData, accessToken, role }: WebViewerProps) {
+  const t = useTranslations('specificDoc');
   const router = useRouter();
 
   const viewer = useRef<HTMLDivElement>(null);
@@ -529,7 +531,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
             onClick={handleDownload}
           >
             <Download className='mr-2 h-4 w-4 cursor-pointer' />
-            Download
+            {t('download')}
           </Button>
           <Button
             variant='outline'
@@ -540,7 +542,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
             disabled={role === 'owner' ? false : true} // Disable share button for non-owners
           >
             <Share className='mr-2 h-4 w-4' />
-            Share
+            {t('share')}
           </Button>
         </div>
       </div>
@@ -657,7 +659,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                 }}
               >
                 <Image src='/icons/md_rectangle.svg' alt='rectangle' width={24} height={24} />
-                <span>Shape</span>
+                <span>{t('shape')}</span>
               </button>
               <ShapeAnnotControl
                 shapeState={shapeState}
@@ -693,7 +695,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                 }}
               >
                 <Image src='/icons/lm-tool-type.svg' alt='rectangle' width={24} height={24} />
-                <span>Type</span>
+                <span>{t('type')}</span>
               </button>
               <TextAnnotControl
                 textState={textState}
