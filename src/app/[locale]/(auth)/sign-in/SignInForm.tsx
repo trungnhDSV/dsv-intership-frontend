@@ -8,6 +8,7 @@ import React, { useActionState, useEffect, useRef } from 'react';
 import { signInAction } from '../../../../lib/actions/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 
 const SignInForm = () => {
   const searchParams = useSearchParams();
@@ -15,6 +16,8 @@ const SignInForm = () => {
 
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+
+  const t = useTranslations('auth');
   const [state, formAction] = useActionState(signInAction, {
     values: {
       email: '',
@@ -55,13 +58,15 @@ const SignInForm = () => {
           <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
             <div>
               <p className='mb-1'>
-                Email <span className='text-[#EC221F]'>*</span>
+                {t.rich('emailLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 name='email'
                 id='email'
                 defaultValue={state?.values?.email}
-                placeholder='Input email address'
+                placeholder={t('emailPlaceholder')}
                 type='email'
                 autoComplete='email'
                 className={state?.errors?.email ? 'border-red-800' : ''}
@@ -72,7 +77,9 @@ const SignInForm = () => {
             </div>
             <div>
               <p className='mb-1'>
-                Password <span className='text-[#EC221F]'>*</span>
+                {t.rich('passwordLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 name='password'
