@@ -19,9 +19,9 @@ export function useAutoLogout() {
 
     if (expiresIn > 0) {
       const timeout = setTimeout(() => {
+        localStorage.removeItem('googleDriveToken');
         signOut();
       }, expiresIn * 1000);
-
       return () => clearTimeout(timeout);
     } else {
       // Token đã hết hạn, logout luôn
@@ -29,6 +29,7 @@ export function useAutoLogout() {
         title: 'Your session has expired',
         description: 'Please log in again',
       });
+      localStorage.removeItem('googleDriveToken');
       signOut();
     }
     console.log(session?.accessToken);

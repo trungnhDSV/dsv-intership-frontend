@@ -3,6 +3,7 @@ import { signOut } from 'next-auth/react';
 
 const SignOutBtn = () => {
   const handleSignOut = async () => {
+    localStorage.removeItem('googleDriveToken');
     await signOut();
   };
 

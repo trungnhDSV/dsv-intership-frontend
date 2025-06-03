@@ -35,3 +35,9 @@ export interface TextAnnotationState {
   opacity: number;
   radioGroup: RadioGroupType;
 }
+
+declare global {
+  interface Window {
+    gapi: any;
+  }
+}

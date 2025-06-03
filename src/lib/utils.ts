@@ -25,3 +25,21 @@ export function formatDate(dateStr: string): string {
 
   return `${datePart} ${timePart}`;
 }
+
+export const handleTranslationError = (t: (arg: string) => string, detail: string) => {
+  switch (detail) {
+    case 'Invalid email or password':
+      return t('invalidSignIn');
+    case 'Mandatory field':
+      return t('mandatoryField');
+    case 'You must accept the terms':
+      return t('mustAccept');
+    case 'Passwords must be the same':
+      return t('mustSamePass');
+    case 'Password must be at least 8 characters long':
+      return t('mustPassLength');
+    default:
+      console.error('Translation error:', detail);
+      return 'Unset';
+  }
+};

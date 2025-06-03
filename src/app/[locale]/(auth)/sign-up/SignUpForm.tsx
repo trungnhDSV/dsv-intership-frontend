@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { signUpAction } from '@/lib/actions/auth';
+import { handleTranslationError } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -12,6 +14,7 @@ import React, { useActionState, useEffect, useRef } from 'react';
 const SignUpForm = () => {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const t = useTranslations('auth');
 
   const [state, formAction] = useActionState(signUpAction, {
     values: {
@@ -36,7 +39,7 @@ const SignUpForm = () => {
   return (
     <div className='w-1/3 px-12 h-screen bg-white p-12 flex flex-col justify-center items-center gap-10'>
       <div className='flex justify-center gap-2'>
-        <h1 className='text-5xl font-bold tracking-tight'>Sign Up</h1>
+        <h1 className='text-5xl font-bold tracking-tight'>{t('signUp')}</h1>
         <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8' />
       </div>
       <div className='flex flex-col gap-10'>
@@ -45,66 +48,80 @@ const SignUpForm = () => {
         <div className='flex gap-[24px] flex-col'>
           <div className='flex items-center'>
             <hr className='flex-1' />
-            <p className='text-sm'>or</p>
+            <p className='text-sm'>{t('or')}</p>
             <hr className='flex-1' />
           </div>
           <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
             <div>
               <p className='mb-1'>
-                Full Name <span className='text-[#EC221F]'>*</span>
+                {t.rich('fullNameLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 type='text'
-                placeholder='Input full name'
+                placeholder={t('fullNamePlaceholder')}
                 name='fullName'
                 id='fullName'
                 defaultValue={state?.values?.fullName}
                 className={state?.errors?.fullName ? 'border-red-800' : ''}
               />
               {state?.errors?.fullName && (
-                <p className='text-sm text-[#900B09] mt-1'>{state.errors.fullName[0]}</p>
+                <p className='text-sm text-[#900B09] mt-1'>
+                  {handleTranslationError(t, state.errors.fullName[0])}
+                </p>
               )}
             </div>
             <div>
               <p className='mb-1'>
-                Email <span className='text-[#EC221F]'>*</span>
+                {t.rich('emailLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 name='email'
                 id='email'
                 defaultValue={state?.values?.email}
-                placeholder='Input email address'
+                placeholder={t('emailPlaceholder')}
                 type='email'
                 autoComplete='email'
                 className={state?.errors?.email ? 'border-red-800' : ''}
               />
               {state?.errors?.email && (
-                <p className='text-sm text-[#900B09] mt-1'>{state.errors.email[0]}</p>
+                <p className='text-sm text-[#900B09] mt-1'>
+                  {handleTranslationError(t, state.errors.email[0])}
+                </p>
               )}
             </div>
             <div>
               <p className='mb-1'>
-                Password <span className='text-[#EC221F]'>*</span>
+                {t.rich('passwordLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 name='password'
                 id='password'
                 defaultValue={state?.values?.password}
-                placeholder='Input password'
+                placeholder={t('passwordPlaceholder')}
                 type='password'
                 className={state?.errors?.password ? 'border-red-800' : ''}
               />
               {state?.errors?.password && (
-                <p className='text-sm text-[#900B09] mt-1'>{state.errors.password[0]}</p>
+                <p className='text-sm text-[#900B09] mt-1'>
+                  {handleTranslationError(t, state.errors.password[0])}
+                </p>
               )}
             </div>
             <div>
               <p className='mb-1'>
-                Re-confirm password <span className='text-[#EC221F]'>*</span>
+                {t.rich('rePasswordLabel', {
+                  tag: (chunks) => <span className='text-[#EC221F]'>{chunks}</span>,
+                })}
               </p>
               <Input
                 type='password'
-                placeholder='Re-confirm password'
+                placeholder={t('rePasswordPlaceholder')}
                 name='confirmPassword'
                 id='confirmPassword'
                 defaultValue={state?.values?.confirmPassword}
@@ -121,25 +138,28 @@ const SignUpForm = () => {
                   htmlFor='terms'
                   className='text-sm font-light leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 '
                 >
-                  I accept all <b className='font-semibold'>Terms of Service</b> and{' '}
-                  <b className='font-semibold'>Privacy Policy</b>
+                  {t.rich('accept', {
+                    tag: (chunks) => <b className='font-semibold'>{chunks}</b>,
+                  })}
                 </label>
               </div>
               {state?.errors?.terms && (
-                <p className='text-sm text-[#900B09] mt-1'>{state.errors.terms[0]}</p>
+                <p className='text-sm text-[#900B09] mt-1'>
+                  {handleTranslationError(t, state.errors.terms[0])}
+                </p>
               )}
             </div>
 
             <Button variant={'primary'} type='submit' className='w-full mt-2'>
-              Sign up
+              {t('signUpButton')}
             </Button>
           </form>
         </div>
         <div className='text-center'>
           <p>
-            Already have an account?{' '}
+            {t('alreadyHaveAccount')}
             <Link href='/sign-in'>
-              <span className='text-primary font-bold hover:underline'>Sign In</span>
+              <span className='text-primary font-bold hover:underline'>{t('signInButton')}</span>
             </Link>
           </p>
         </div>

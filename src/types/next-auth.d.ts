@@ -3,12 +3,13 @@ import NextAuth from 'next-auth';
 declare module 'next-auth' {
   interface Session {
     accessToken?: string;
+    driveAccessToken?: string;
+    driveRefreshToken?: string;
     user?: {
       id: string;
       email: string;
       name: string;
     };
-    googleAccessToken?: string;
   }
 
   interface User {

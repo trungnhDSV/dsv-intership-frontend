@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
@@ -23,6 +23,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
+import { googleAuthorizeUpload } from '@/lib/actions/auth';
+import { signIn } from 'next-auth/react';
+import { useListenGoogleDriveToken } from '@/app/hooks/useListenGoogleDriveToken';
 
 interface UploadDialogProps {
   session: Session | null;
@@ -41,16 +44,42 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     if (!fileInputRef.current) return;
     fileInputRef.current.click();
   };
+  const handleConnectGoogleDrive = () => {
+    // Mở một popup tới API route phía backend
+    const width = 500,
+      height = 600;
+    const left = (window.innerWidth - width) / 2;
+    const top = (window.innerHeight - height) / 2;
+    window.open(
+      '/api/oauth/google-drive/start',
+      'GoogleDriveAuth',
+      `width=${width},height=${height},top=${top},left=${left}`
+    );
+  };
+
+  useListenGoogleDriveToken((data) => {
+    // Lưu access_token, refresh_token, profile vào localStorage/state/...
+    localStorage.setItem('googleDriveToken', data.access_token);
+    localStorage.setItem('googleDriveProfile', JSON.stringify(data.profile));
+    showSuccessToast({
+      title: 'Connected to Google Drive',
+      description: `You can now upload files from your Google Drive.`,
+    });
+  });
 
   // handle upload with Google Drive
   const handleGoogleDriveUpload = async () => {
     // 1. Nhận access token của Google từ session NextAuth
-    const googleToken = session?.googleAccessToken; // Kiểm tra đúng property nhé!
+    let googleToken = localStorage.getItem('googleDriveToken'); // Kiểm tra đúng property nhé!
+    console.log('Google token from localStorage:', googleToken);
     if (!googleToken) {
-      showErrorToast({ title: 'Bạn cần đăng nhập Google!' });
+      handleConnectGoogleDrive();
       return;
     }
-
+    if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) {
+      console.error('Missing Google API key in environment variables');
+      return;
+    }
     console.log('Google token:', googleToken);
 
     // 2. Load Google Picker API
@@ -200,91 +229,50 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   return (
     <>
       <div>
-        {session?.googleAccessToken ? (
-          <>
-            <DropdownMenu
-              dir='ltr'
+        <DropdownMenu
+          dir='ltr'
 
-              //  open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}
+          //  open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}
+        >
+          <DropdownMenuTrigger asChild>
+            <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
+              <Image src='/icon-upload.svg' alt='upload' width={16} height={16} className='mr-2' />
+              Upload Document
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9] z-10000'>
+            <DropdownMenuItem
+              className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
+              onClick={handleTriggerFileInput}
             >
-              <DropdownMenuTrigger asChild>
-                <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
-                  <Image
-                    src='/icon-upload.svg'
-                    alt='upload'
-                    width={16}
-                    height={16}
-                    className='mr-2'
-                  />
-                  Upload Document
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9] z-10000'>
-                <DropdownMenuItem
-                  className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
-                  onClick={handleTriggerFileInput}
-                >
-                  <input
-                    id='fileUpload'
-                    ref={fileInputRef}
-                    type='file'
-                    accept='application/pdf'
-                    className='hidden'
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        console.log('START HANDLE UPLOAD');
-                        handleUpload(file);
-                      }
-                      e.target.value = '';
-                    }}
-                  />
+              <input
+                id='fileUpload'
+                ref={fileInputRef}
+                type='file'
+                accept='application/pdf'
+                className='hidden'
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    console.log('START HANDLE UPLOAD');
+                    handleUpload(file);
+                  }
+                  e.target.value = '';
+                }}
+              />
 
-                  <label htmlFor='fileUpload'>
-                    <button className='w-fit'>Upload with File</button>
-                  </label>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
-                  onClick={handleGoogleDriveUpload}
-                >
-                  <div className='w-fit'>Upload with Google Drive</div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <>
-            <input
-              id='fileUpload'
-              ref={fileInputRef}
-              type='file'
-              accept='application/pdf'
-              className='hidden'
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  console.log('START HANDLE UPLOAD');
-                  handleUpload(file);
-                }
-                e.target.value = '';
-              }}
-            />
-
-            <label htmlFor='fileUpload'>
-              <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
-                <Image
-                  src='/icon-upload.svg'
-                  alt='upload'
-                  width={16}
-                  height={16}
-                  className='mr-2'
-                />
-                Upload Document
-              </Button>
-            </label>
-          </>
-        )}
+              <label htmlFor='fileUpload'>
+                <button className='w-fit'>Upload with File</button>
+              </label>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
+              onClick={handleGoogleDriveUpload}
+            >
+              <div className='w-fit'>Upload with Google Drive</div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       {/* Dialog hiển thị sau khi chọn file hợp lệ */}
       <Dialog open={isDialogOpen}>

@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import VerifyNav from '@/components/VerifyNav';
 import { NavbarHeight } from '@/constants/UI';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -9,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 const VerifyPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const t = useTranslations('verify');
   useEffect(() => {
     const savedEmail = localStorage.getItem('pendingEmail');
     if (savedEmail) setEmail(savedEmail);
@@ -57,7 +59,7 @@ const SendVerificationEmail = ({ email }: { email: string }) => {
         alt='logo'
         className='w-[192px] h-[192px]'
       />
-      <p className='font-bold text-[32px]'>Verify your email address</p>
+      <p className='font-bold text-[32px]'>{}</p>
       <p>
         We&apos;ve just sent a verification email to <span className='font-semibold'>{email}</span>.
         Please check your inbox
