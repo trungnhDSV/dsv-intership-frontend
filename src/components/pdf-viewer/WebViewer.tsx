@@ -222,7 +222,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                 const scrollTop = scrollEl?.scrollTop || 0;
                 const pagePoint = {
                   x: annotRect.x2,
-                  y: annotRect.y2,
+                  y: annotRect.getBottom(),
                 };
                 const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
                 const windowPoint = displayMode.pageToWindow(pagePoint, currentPage);

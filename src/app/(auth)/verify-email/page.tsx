@@ -38,7 +38,7 @@ const VerifyPage = () => {
 export default VerifyPage;
 
 const SendVerificationEmail = ({ email }: { email: string }) => {
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(0);
   useEffect(() => {
     if (countdown <= 0) return;
 

@@ -8,6 +8,7 @@ import React, { useActionState, useEffect, useRef } from 'react';
 import { signInAction } from '../../../lib/actions/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
+import { Spinner } from '@/components/ui/spinner';
 
 const SignInForm = () => {
   const searchParams = useSearchParams();
@@ -15,6 +16,7 @@ const SignInForm = () => {
 
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
+  const [isLoading, setIsLoading] = React.useState(false);
   const [state, formAction] = useActionState(signInAction, {
     values: {
       email: '',
@@ -24,14 +26,17 @@ const SignInForm = () => {
     message: '',
   });
   useEffect(() => {
+    if (state) {
+      setIsLoading(false);
+    }
     async function checkSession() {
       if (state?.success) {
-        await getSession();
         router.push('/documents');
+        await getSession();
       }
     }
     checkSession();
-  }, [state?.success, router]);
+  }, [state, router]);
   return (
     <div className='bg-white rounded-xl p-12 flex flex-col gap-10'>
       <div className='flex justify-center'>
@@ -52,7 +57,12 @@ const SignInForm = () => {
               email & password
             </div>
           )}
-          <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
+          <form
+            ref={formRef}
+            action={formAction}
+            className='flex flex-col gap-4'
+            onSubmit={() => setIsLoading(true)}
+          >
             <div>
               <p className='mb-1'>
                 Email <span className='text-[#EC221F]'>*</span>
@@ -87,8 +97,13 @@ const SignInForm = () => {
                 <p className='text-sm text-[#900B09] mt-1'>{state.errors.password[0]}</p>
               )}
             </div>
-            <Button variant={'primary'} type='submit' className='w-[360px] mt-2'>
-              Sign In
+            <Button
+              variant={'primary'}
+              type='submit'
+              className='w-[360px] mt-2'
+              disabled={isLoading}
+            >
+              {isLoading ? <Spinner size='medium'></Spinner> : 'Sign In'}
             </Button>
           </form>
         </div>

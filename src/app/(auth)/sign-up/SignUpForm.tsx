@@ -3,15 +3,17 @@ import { GoogleSignIn } from '@/components/google-sign-in';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { signUpAction } from '@/lib/actions/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useActionState, useEffect, useRef } from 'react';
+import React, { useActionState, useEffect, useRef, useState } from 'react';
 
 const SignUpForm = () => {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [state, formAction] = useActionState(signUpAction, {
     values: {
@@ -32,6 +34,12 @@ const SignUpForm = () => {
     }
   }, [state?.success, router, state?.values?.email]);
 
+  useEffect(() => {
+    if (state) {
+      setIsLoading(false);
+    }
+  }, [state]);
+
   console.log('state', state);
   return (
     <div className='w-1/3 px-12 h-screen bg-white p-12 flex flex-col justify-center items-center gap-10'>
@@ -48,7 +56,12 @@ const SignUpForm = () => {
             <p className='text-sm'>or</p>
             <hr className='flex-1' />
           </div>
-          <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
+          <form
+            ref={formRef}
+            action={formAction}
+            className='flex flex-col gap-4'
+            onSubmit={() => setIsLoading(true)}
+          >
             <div>
               <p className='mb-1'>
                 Full Name <span className='text-[#EC221F]'>*</span>
@@ -130,8 +143,8 @@ const SignUpForm = () => {
               )}
             </div>
 
-            <Button variant={'primary'} type='submit' className='w-full mt-2'>
-              Sign up
+            <Button variant={'primary'} type='submit' className='w-full mt-2' disabled={isLoading}>
+              {isLoading ? <Spinner size='medium'></Spinner> : 'Sign Up'}
             </Button>
           </form>
         </div>
