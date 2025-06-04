@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import { useTranslations } from 'next-intl';
 import { handleTranslationError } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 
 const SignInForm = () => {
   const searchParams = useSearchParams();
@@ -19,6 +20,7 @@ const SignInForm = () => {
   const router = useRouter();
 
   const t = useTranslations('auth');
+  const [isLoading, setIsLoading] = React.useState(false);
   const [state, formAction] = useActionState(signInAction, {
     values: {
       email: '',
@@ -28,14 +30,17 @@ const SignInForm = () => {
     message: '',
   });
   useEffect(() => {
+    if (state) {
+      setIsLoading(false);
+    }
     async function checkSession() {
       if (state?.success) {
-        await getSession();
         router.push('/documents');
+        await getSession();
       }
     }
     checkSession();
-  }, [state?.success, router]);
+  }, [state, router]);
   return (
     <div className='bg-white rounded-xl p-12 flex flex-col gap-10'>
       <div className='flex justify-center'>
@@ -55,7 +60,12 @@ const SignInForm = () => {
               {t('accountExists')}
             </div>
           )}
-          <form ref={formRef} action={formAction} className='flex flex-col gap-4'>
+          <form
+            ref={formRef}
+            action={formAction}
+            className='flex flex-col gap-4'
+            onSubmit={() => setIsLoading(true)}
+          >
             <div>
               <p className='mb-1'>
                 {t.rich('emailLabel', {
@@ -98,8 +108,13 @@ const SignInForm = () => {
                 </p>
               )}
             </div>
-            <Button variant={'primary'} type='submit' className='w-[360px] mt-2'>
-              {t('signInButton')}
+            <Button
+              variant={'primary'}
+              type='submit'
+              className='w-[360px] mt-2'
+              disabled={isLoading}
+            >
+              {isLoading ? <Spinner size='medium'></Spinner> : t('signInButton')}
             </Button>
           </form>
         </div>

@@ -3,14 +3,21 @@ import { Button } from '@/components/ui/button';
 import VerifyNav from '@/components/VerifyNav';
 import { NavbarHeight } from '@/constants/UI';
 import { useTranslations } from 'next-intl';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 
 const VerifyPage = () => {
+  const { data: session, status } = useSession();
   const router = useRouter();
+
   const [email, setEmail] = useState('');
   const t = useTranslations('verify');
+  useEffect(() => {
+    if (status === 'loading') return;
+    else if (status === 'authenticated') router.push('/documents');
+  }, [session, status, router]);
   useEffect(() => {
     const savedEmail = localStorage.getItem('pendingEmail');
     if (savedEmail) setEmail(savedEmail);
@@ -33,6 +40,17 @@ const VerifyPage = () => {
 export default VerifyPage;
 
 const SendVerificationEmail = ({ email }: { email: string }) => {
+  const [countdown, setCountdown] = useState(0);
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [countdown]);
+
   const handleResendVerification = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify?email=${email}`, {
@@ -68,9 +86,10 @@ const SendVerificationEmail = ({ email }: { email: string }) => {
         Didn&apos;t receive an email?{' '}
         <Button
           onClick={handleResendVerification}
+          disabled={countdown > 0}
           className='text-[16px] bg-transparent text-[#B28A05] underline hover:bg-transparent p-0 cursor-pointer'
         >
-          Resend Verification Link
+          {countdown > 0 ? `Resend in ${countdown}s` : 'Resend Verification Link'}
         </Button>
       </p>
     </div>

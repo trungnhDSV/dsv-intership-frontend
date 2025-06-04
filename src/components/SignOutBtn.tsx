@@ -7,7 +7,11 @@ const SignOutBtn = () => {
     await signOut();
   };
 
-  return <button onClick={handleSignOut}>SignOut</button>;
+  return (
+    <button onClick={handleSignOut} className='cursor-pointer w-full text-start'>
+      SignOut
+    </button>
+  );
 };
 
 export default SignOutBtn;
