@@ -46,7 +46,11 @@
     "lastUpdated": "Last updated",
     "noDocuments": "There are no documents found",
     "loading": "Loading more documents...",
-    "you": "You"
+    "you": "You",
+    "uploadDocument": "Upload Document",
+    "uploadWithFile": "Upload with File",
+    "uploadWithGoogleDrive": "Upload with Google Drive",
+    "uploading": "Uploading..."
   },
   "home": {
     "projectName": "DI-PDF",

@@ -1,4 +1,5 @@
 'use client';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import SignOutBtn from '@/components/SignOutBtn';
 import { NavbarHeight } from '@/constants/UI';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,11 @@ const MainNav = () => {
               <DropdownMenuItem className='px-4 py-3'>
                 <div className='w-[137px] text-[16px]'>
                   <SignOutBtn />
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem className='px-4 py-3'>
+                <div className='w-[137px] text-[16px]'>
+                  <LanguageSwitcher />
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>

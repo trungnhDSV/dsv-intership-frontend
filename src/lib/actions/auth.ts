@@ -49,15 +49,6 @@ export async function googleSignInAction() {
   await signIn('google');
 }
 
-export async function googleAuthorizeUpload() {
-  await signIn('google', {
-    callbackUrl: '/documents', // hoặc trang upload
-    scope: 'openid email profile https://www.googleapis.com/auth/drive.readonly',
-    prompt: 'consent',
-    access_type: 'offline',
-  });
-}
-
 export type SignUpState = {
   success?: boolean;
   errors?: Record<string, string[]>;

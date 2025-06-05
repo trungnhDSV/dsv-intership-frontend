@@ -31,6 +31,7 @@ export const columns: ColumnDef<FileMetadata>[] = [
               <AvatarFallback className='text-xs font-medium text-gray-900'>
                 {row.original.ownerName
                   .replace('(You)', '')
+                  .replace('(Bạn)', '')
                   .split(' ')
                   .map((n) => n[0])}
               </AvatarFallback>
@@ -51,7 +52,10 @@ export const columns: ColumnDef<FileMetadata>[] = [
         <div className='flex w-fit text-sm'>
           {t('lastUpdated')}
           <button
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            onClick={() => {
+              console.log('Sorting by date');
+              column.toggleSorting(column.getIsSorted() === 'asc');
+            }}
             className='cursor-pointer'
           >
             <ArrowUpDown className='ml-2 h-4 w-4' />
@@ -82,6 +86,11 @@ export const columns: ColumnDef<FileMetadata>[] = [
           </span>
         </div>
       );
+    },
+    sortingFn: (rowA, rowB) => {
+      const dateA = new Date(rowA.original.uploadedAt).getTime();
+      const dateB = new Date(rowB.original.uploadedAt).getTime();
+      return dateA - dateB;
     },
   },
 ];

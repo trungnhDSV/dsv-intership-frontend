@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
@@ -23,9 +23,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
-import { googleAuthorizeUpload } from '@/lib/actions/auth';
-import { signIn } from 'next-auth/react';
 import { useListenGoogleDriveToken } from '@/app/hooks/useListenGoogleDriveToken';
+import { useTranslations } from 'next-intl';
 
 interface UploadDialogProps {
   session: Session | null;
@@ -38,6 +37,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('documents');
 
   // handle trigger file input
   const handleTriggerFileInput = () => {
@@ -65,22 +65,22 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
       title: 'Connected to Google Drive',
       description: `You can now upload files from your Google Drive.`,
     });
+    handleGoogleDriveUpload();
   });
 
   // handle upload with Google Drive
   const handleGoogleDriveUpload = async () => {
-    // 1. Nhận access token của Google từ session NextAuth
-    let googleToken = localStorage.getItem('googleDriveToken'); // Kiểm tra đúng property nhé!
+    let googleToken = localStorage.getItem('googleDriveToken');
     console.log('Google token from localStorage:', googleToken);
     if (!googleToken) {
       handleConnectGoogleDrive();
       return;
+      // let googleToken = localStorage.getItem('googleDriveToken');
     }
     if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) {
       console.error('Missing Google API key in environment variables');
       return;
     }
-    console.log('Google token:', googleToken);
 
     // 2. Load Google Picker API
     if (!window.google || !window.google.picker) {
@@ -107,9 +107,9 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
             }
           );
           const blob = await response.blob();
-          // 4. Tạo file từ blob (để reuse logic)
+          // 4. Tạo file từ blob
           const file = new File([blob], picked.name, { type: blob.type });
-          // 5. Gọi lại handleUpload (reuse)
+          // 5. Gọi lại handleUpload
           handleUpload(file);
         }
       })
@@ -228,16 +228,31 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
 
   return (
     <>
+      <input
+        id='fileUpload'
+        ref={fileInputRef}
+        type='file'
+        accept='application/pdf'
+        className='hidden'
+        onChange={(e) => {
+          console.log('File input changed:', e.target.files);
+          const file = e.target.files?.[0];
+          if (file) {
+            console.log('START HANDLE UPLOAD');
+            handleUpload(file);
+          }
+          e.target.value = '';
+        }}
+      />
       <div>
         <DropdownMenu
           dir='ltr'
-
           //  open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}
         >
           <DropdownMenuTrigger asChild>
-            <Button variant='primary' type='button' onClick={handleTriggerFileInput}>
+            <Button variant='primary' type='button'>
               <Image src='/icon-upload.svg' alt='upload' width={16} height={16} className='mr-2' />
-              Upload Document
+              {t('uploadDocument')}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9] z-10000'>
@@ -245,31 +260,15 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
               className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
               onClick={handleTriggerFileInput}
             >
-              <input
-                id='fileUpload'
-                ref={fileInputRef}
-                type='file'
-                accept='application/pdf'
-                className='hidden'
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    console.log('START HANDLE UPLOAD');
-                    handleUpload(file);
-                  }
-                  e.target.value = '';
-                }}
-              />
-
               <label htmlFor='fileUpload'>
-                <button className='w-fit'>Upload with File</button>
+                <button className='w-fit'>{t('uploadWithFile')}</button>
               </label>
             </DropdownMenuItem>
             <DropdownMenuItem
               className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
               onClick={handleGoogleDriveUpload}
             >
-              <div className='w-fit'>Upload with Google Drive</div>
+              <div className='w-fit'>{t('uploadWithGoogleDrive')}</div>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -279,7 +278,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
         <DialogContent className='p-4 w-fit'>
           <DialogHeader className='-mx-4 px-6 border-b border-b-[#D9D9D9] '>
             <DialogTitle>
-              <div className='font-semibold pb-4'>Uploading</div>
+              <div className='font-semibold pb-4'>{t('uploading')}</div>
             </DialogTitle>
             <DialogDescription></DialogDescription>
           </DialogHeader>
@@ -294,7 +293,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
                   height={100}
                   className='w-6 h-6 m-[6px]'
                 />
-                <div className='flex-1 flex flex-col gap-1 mr-2'>
+                <div className='flex-1 max-w-[416px] flex flex-col gap-1 mr-2'>
                   <p>{selectedFile?.name}</p>
                   <Progress
                     value={progress}

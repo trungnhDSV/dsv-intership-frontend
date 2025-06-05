@@ -4,46 +4,56 @@
     "signUp": "Đăng ký",
     "continueWithGoogle": "Tiếp tục với Google",
     "or": "hoặc",
-    "email": "Email",
+    "emailLabel": "Email <tag>*</tag>",
     "emailPlaceholder": "Nhập địa chỉ email",
-    "password": "Mật khẩu",
+    "passwordLabel": "Mật khẩu <tag>*</tag>",
     "passwordPlaceholder": "Nhập mật khẩu",
-    "rePassword": "Nhập lại mật khẩu",
-    "rePasswordPlaceholder": "Nhập lại mật khẩu",
-    "fullName": "Họ và tên",
-    "fullNamePlaceholder": "Nhập họ và tên",
     "mandatoryField": "Trường bắt buộc",
+    "invalidSignIn": "Email hoặc mật khẩu không hợp lệ",
+    "accountExists": "Email này đã được sử dụng để đăng nhập bằng email & mật khẩu. Vui lòng đăng nhập bằng email & mật khẩu",
     "invalidEmail": "Địa chỉ email không hợp lệ",
     "invalidPassword": "Mật khẩu phải có ít nhất 8 ký tự",
     "invalidEmailOnly": "Email không hợp lệ",
-    "incorrectAuth": "Email hoặc mật khẩu không đúng",
+    "incorrectAuth": "Email hoặc mật khẩu không chính xác",
+    "dontHaveAccount": "Chưa có tài khoản? ",
+    "alreadyHaveAccount": "Đã có tài khoản? ",
     "signInButton": "Đăng nhập",
     "signUpButton": "Đăng ký",
-    "haveAccount": "Bạn đã có tài khoản?",
-    "accept": "Tôi đồng ý với tất cả Điều khoản dịch vụ và Chính sách bảo mật"
+    "fullNameLabel": "Họ và tên <tag>*</tag>",
+    "fullNamePlaceholder": "Nhập họ và tên",
+    "rePasswordLabel": "Nhập lại mật khẩu <tag>*</tag>",
+    "rePasswordPlaceholder": "Nhập lại mật khẩu",
+    "accept": "Tôi chấp nhận tất cả <tag>Điều khoản dịch vụ</tag> và <tag>Chính sách bảo mật</tag>",
+    "mustAccept": "Bạn phải đồng ý với các điều khoản",
+    "mustSamePass": "Mật khẩu nhập lại không khớp",
+    "mustPassLength": "Mật khẩu phải có ít nhất 8 ký tự"
   },
   "verify": {
     "verifyTitle": "Xác minh địa chỉ email",
-    "verifyDescription": "Chúng tôi vừa gửi email xác minh đến {email}. Vui lòng kiểm tra hộp thư của bạn",
+    "verifyDescription": "Chúng tôi vừa gửi một email xác minh đến {email}. Vui lòng kiểm tra hộp thư đến của bạn",
     "resend": "Gửi lại liên kết xác minh",
     "notReceive": "Không nhận được email?",
-    "wellDone": "Hoàn thành!!",
+    "wellDone": "Chúc mừng!!",
     "successVerify": "Bạn đã xác minh email thành công.",
-    "goToDocs": "Đi đến tài liệu của tôi"
+    "goToDocs": "Đi đến Tài liệu của tôi"
   },
   "documents": {
     "myDocuments": "Tài liệu của tôi",
     "total": "Tổng cộng",
     "fileName": "Tên tệp",
-    "owner": "Chủ sở hữu",
+    "owner": "Chủ sở hữu tài liệu",
     "lastUpdated": "Cập nhật lần cuối",
     "noDocuments": "Không tìm thấy tài liệu nào",
     "loading": "Đang tải thêm tài liệu...",
-    "you": "Bạn"
+    "you": "Bạn",
+    "uploadDocument": "Tải lên tài liệu",
+    "uploadWithFile": "Tải lên từ tệp",
+    "uploadWithGoogleDrive": "Tải lên từ Google Drive",
+    "uploading": "Đang tải lên..."
   },
   "home": {
     "projectName": "DI-PDF",
-    "slogan": "Nơi cộng tác tài liệu nhanh chóng, dễ dàng và thú vị"
+    "slogan": "Một thế giới nơi việc cộng tác tài liệu trở nên nhanh chóng, thú vị và dễ dàng"
   },
   "notFoundDoc": {
     "tittle": "Bạn không có quyền truy cập tệp này",
@@ -54,6 +64,6 @@
     "download": "Tải xuống",
     "share": "Chia sẻ",
     "shape": "Hình dạng",
-    "type": "Chữ"
+    "type": "Loại"
   }
 }
