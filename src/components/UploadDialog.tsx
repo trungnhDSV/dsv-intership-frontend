@@ -25,11 +25,32 @@ import {
 } from '@radix-ui/react-dropdown-menu';
 import { useListenGoogleDriveToken } from '@/app/hooks/useListenGoogleDriveToken';
 import { useTranslations } from 'next-intl';
+import { handleConnectGoogleDrive } from '@/lib/actions/google-authorize';
 
 interface UploadDialogProps {
   session: Session | null;
   onUploadSuccess?: (newDocs: FileMetadata) => void;
 }
+
+const isGoogleTokenValid = async (token: string): Promise<boolean> => {
+  try {
+    const res = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (res.status === 401) {
+      // Token expired or invalid
+      return false;
+    }
+
+    return res.ok;
+  } catch (error) {
+    console.error('Error checking Google token validity:', error);
+    return false;
+  }
+};
 
 export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   const [progress, setProgress] = useState(0);
@@ -44,18 +65,6 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     if (!fileInputRef.current) return;
     fileInputRef.current.click();
   };
-  const handleConnectGoogleDrive = () => {
-    // Mở một popup tới API route phía backend
-    const width = 500,
-      height = 600;
-    const left = (window.innerWidth - width) / 2;
-    const top = (window.innerHeight - height) / 2;
-    window.open(
-      '/api/oauth/google-drive/start',
-      'GoogleDriveAuth',
-      `width=${width},height=${height},top=${top},left=${left}`
-    );
-  };
 
   useListenGoogleDriveToken((data) => {
     // Lưu access_token, refresh_token, profile vào localStorage/state/...
@@ -63,16 +72,16 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     localStorage.setItem('googleDriveProfile', JSON.stringify(data.profile));
     showSuccessToast({
       title: 'Connected to Google Drive',
-      description: `You can now upload files from your Google Drive.`,
+      description: `You are now connected to Google Drive as ${data.profile.email}`,
     });
-    handleGoogleDriveUpload();
+    // handleGoogleDriveUpload();
   });
 
   // handle upload with Google Drive
   const handleGoogleDriveUpload = async () => {
     let googleToken = localStorage.getItem('googleDriveToken');
     console.log('Google token from localStorage:', googleToken);
-    if (!googleToken) {
+    if (!googleToken || !(await isGoogleTokenValid(googleToken))) {
       handleConnectGoogleDrive();
       return;
       // let googleToken = localStorage.getItem('googleDriveToken');
@@ -100,6 +109,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
         if (data.action === window.google.picker.Action.PICKED) {
           const picked = data.docs[0];
           // 3. Tải file từ Google Drive về (dùng fetch với access token)
+
           const response = await fetch(
             `https://www.googleapis.com/drive/v3/files/${picked.id}?alt=media`,
             {
@@ -107,10 +117,13 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
             }
           );
           const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
+          console.log('Blob URL:', blobUrl);
           // 4. Tạo file từ blob
           const file = new File([blob], picked.name, { type: blob.type });
           // 5. Gọi lại handleUpload
-          handleUpload(file);
+          const profile = JSON.parse(localStorage.getItem('googleDriveProfile') || '{}');
+          handleUpload(file, true, picked.id, profile);
         }
       })
       .build();
@@ -118,7 +131,12 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
   };
 
   // Xử lý upload
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (
+    file: File,
+    byGGDrive: boolean = false,
+    googleDriveFileId?: string,
+    googleDriveProfile?: { email: string; id: string }
+  ) => {
     setSelectedFile(file);
     console.log('Selected file:', file);
 
@@ -133,7 +151,6 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
       });
       return;
     }
-    console.log('CHECK PASS', await checkPdfPassword(file));
     const hasPassword = await checkPdfPassword(file);
     if (hasPassword) {
       showErrorToast({
@@ -189,19 +206,43 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
         setSelectedFile(null);
 
         // Step 3: Save metadata to backend
+        const metaPayload: {
+          name: string;
+          s3Key: string;
+          fileSize: number;
+          fileType: string;
+          ownerId: string;
+          googleDrive?: {
+            fileId: string;
+            email: string;
+            accountId: string;
+            mimeType: string;
+          };
+        } = {
+          name: file.name,
+          s3Key,
+          fileSize: file.size,
+          fileType: file.type,
+          ownerId: session!.user!.id,
+        };
+        if (byGGDrive && googleDriveFileId && googleDriveProfile) {
+          metaPayload.googleDrive = {
+            fileId: googleDriveFileId || file.name,
+            email: googleDriveProfile.email,
+            accountId: googleDriveProfile.id,
+            mimeType: file.type,
+          };
+        }
+
+        console.log('Metadata payload:', metaPayload);
+
         const metaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.accessToken}`,
           },
-          body: JSON.stringify({
-            name: file.name,
-            s3Key,
-            fileSize: file.size,
-            fileType: file.type,
-            ownerId: session!.user!.id,
-          }),
+          body: JSON.stringify(metaPayload),
         });
         const result: {
           data: FileMetadata;

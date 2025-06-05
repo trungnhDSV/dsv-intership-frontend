@@ -18,13 +18,25 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
+import { FileMetadata } from '@/types/types';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  setAuthDialogData: (data: {
+    fileName: string;
+    uploaderEmail: string;
+    currAccountEmail?: string;
+  }) => void;
+  setAuthDialogOpen: (open: boolean) => void;
 }
 
-export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData, TValue>({
+  columns,
+  data,
+  setAuthDialogData,
+  setAuthDialogOpen,
+}: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
@@ -70,7 +82,35 @@ export function DataTable<TData, TValue>({ columns, data }: DataTableProps<TData
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     onClick={() => {
-                      router.push(`/documents/${(row.original as { id: string }).id}`);
+                      const data: FileMetadata = row.original;
+                      if (data.googleDrive) {
+                        console.log('Google Drive file clicked:', data.googleDrive);
+                        const currAccountData = JSON.parse(
+                          localStorage.getItem('googleDriveProfile') || '{}'
+                        );
+                        if (!currAccountData.id) {
+                          // Authorize
+                          setAuthDialogData({
+                            fileName: data.name,
+                            uploaderEmail: data.googleDrive.email,
+                          });
+                          setAuthDialogOpen(true);
+                          return;
+                        }
+                        console.log('Current account data:', currAccountData);
+                        if (currAccountData.id === data.googleDrive.accountId) {
+                          router.push(`/documents/${data.id}`);
+                        } else {
+                          // Reauthorize with the correct account and redirect
+                          setAuthDialogData({
+                            fileName: data.name,
+                            uploaderEmail: data.googleDrive.email,
+                            currAccountEmail: currAccountData.email,
+                          });
+                          setAuthDialogOpen(true);
+                          return;
+                        }
+                      } else router.push(`/documents/${(row.original as { id: string }).id}`);
                     }}
                   >
                     {row.getVisibleCells().map((cell) => (

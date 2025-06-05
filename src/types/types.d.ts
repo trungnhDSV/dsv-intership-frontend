@@ -6,6 +6,13 @@ export interface FileMetadata {
   ownerName: string;
   uploadedAt: string;
   s3Key: string;
+  fileType: string;
+  googleDrive?: {
+    fileId: string;
+    email: string;
+    accountId: string;
+    mimeType: string;
+  };
 }
 
 export type RadioGroupType = 'borderLine' | 'fill';

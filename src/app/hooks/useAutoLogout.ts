@@ -20,6 +20,7 @@ export function useAutoLogout() {
     if (expiresIn > 0) {
       const timeout = setTimeout(() => {
         localStorage.removeItem('googleDriveToken');
+        localStorage.removeItem('googleDriveProfile');
         signOut();
       }, expiresIn * 1000);
       return () => clearTimeout(timeout);
@@ -30,6 +31,7 @@ export function useAutoLogout() {
         description: 'Please log in again',
       });
       localStorage.removeItem('googleDriveToken');
+      localStorage.removeItem('googleDriveProfile');
       signOut();
     }
     console.log(session?.accessToken);

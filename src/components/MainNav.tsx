@@ -28,7 +28,16 @@ const MainNav = () => {
         <Image src={'/logo.png'} width={100} height={100} alt='logo' className='w-8 h-8 ml-6' />
       </Link>
       <div className='flex flex-1 justify-end pr-6 items-center gap-4'>
-        <p className='text-[14px]'>Good Morning, {session.user?.name}</p>
+        <LanguageSwitcher />
+        <p className='text-[14px] ml-4'>
+          {(() => {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Good Morning';
+            if (hour < 18) return 'Good Afternoon';
+            return 'Good Evening';
+          })()}
+          , {session.user?.name}
+        </p>
         <div
           className={cn(
             'ring-1 ring-[#E3E8EF] rounded-full p-[4px] w-10 h-10 transition-all duration-200 ease-in-out',
@@ -47,11 +56,6 @@ const MainNav = () => {
               <DropdownMenuItem className='px-4 py-3'>
                 <div className='w-[137px] text-[16px]'>
                   <SignOutBtn />
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuItem className='px-4 py-3'>
-                <div className='w-[137px] text-[16px]'>
-                  <LanguageSwitcher />
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>

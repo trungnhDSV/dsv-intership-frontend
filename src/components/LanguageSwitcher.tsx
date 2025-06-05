@@ -2,14 +2,6 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useLocale } from 'next-intl';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
 
 const LanguageSwitcher = () => {
   const router = useRouter();
@@ -17,33 +9,34 @@ const LanguageSwitcher = () => {
   const locale = useLocale();
 
   const languages = [
-    { code: 'en', label: 'English' },
-    { code: 'vi', label: 'Tiếng Việt' },
+    { code: 'en', label: 'EN' },
+    { code: 'vi', label: 'VN' },
   ];
 
   const onSelectLanguage = (langCode: string) => {
     const segments = pathname.split('/');
-    segments[1] = langCode; // replace locale segment
+    segments[1] = langCode;
     router.replace(segments.join('/'));
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div>{languages.find((l) => l.code === locale)?.label ?? 'Language'}</div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align='start' side='left' className='z-100000'>
-        {languages.map((lang) => (
-          <DropdownMenuItem
-            key={lang.code}
-            onClick={() => onSelectLanguage(lang.code)}
-            disabled={lang.code === locale}
-          >
-            {lang.label}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className='inline-flex rounded-md shadow-sm' role='group'>
+      {languages.map((lang, index) => (
+        <button
+          key={lang.code}
+          onClick={() => onSelectLanguage(lang.code)}
+          className={`px-4 py-2 text-sm font-medium border ${
+            lang.code === locale
+              ? 'bg-[#F5C731] text-white'
+              : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+          } ${index === 0 ? 'rounded-l-lg border-r-0' : ''} ${
+            index === languages.length - 1 ? 'rounded-r-lg border-l-0' : ''
+          } border-gray-200 dark:border-gray-600`}
+        >
+          {lang.label}
+        </button>
+      ))}
+    </div>
   );
 };
 
