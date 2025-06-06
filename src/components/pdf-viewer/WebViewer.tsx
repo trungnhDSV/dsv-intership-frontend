@@ -212,27 +212,66 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
               if (role === 'viewer') return; // Prevent popup in viewer mode
               if (annotations.length === 1) {
                 const annotation = annotations[0];
-
+                const ShapeAnnotControlHeight = 295;
+                const TextAnnotControlHeight = 350;
                 const annotRect = annotation.getRect(); // PDF Coordinates, x1, y1: Top left ,x2, y2: Bottom right
                 if (!annotRect) {
                   console.warn('Annotation has no valid rectangle');
                   return;
                 }
+                const isFreeText = annotation.Subject === 'Free Text';
+                const popupHeight = isFreeText ? TextAnnotControlHeight : ShapeAnnotControlHeight;
 
+                const windowHeight = window.innerHeight;
                 const scrollEl = webViewerInstance.Core.documentViewer.getScrollViewElement();
                 const scrollLeft = scrollEl?.scrollLeft || 0;
                 const scrollTop = scrollEl?.scrollTop || 0;
-                const pagePoint = {
-                  x: annotRect.x2,
-                  y: annotRect.getBottom(),
-                };
                 const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
-                const windowPoint = displayMode.pageToWindow(pagePoint, currentPage);
+
+                console.log(
+                  'Annotation selected:',
+                  annotation,
+                  'isFreeText:',
+                  isFreeText,
+                  annotRect.getTop(),
+                  annotRect.getBottom()
+                );
+
+                // Calculate top & bottom in window coordinates
+                const topWindowPoint = displayMode.pageToWindow(
+                  { x: annotRect.x1, y: annotRect.getTop() },
+                  currentPage
+                );
+                const bottomWindowPoint = displayMode.pageToWindow(
+                  { x: annotRect.x2, y: annotRect.getBottom() },
+                  currentPage
+                );
+
+                const topY = topWindowPoint.y;
+                const bottomY = bottomWindowPoint.y;
+                // Default show below annotation
+                let finalY = bottomY - scrollTop - 10;
+
+                const spaceBelow = windowHeight - bottomY - scrollTop;
+                const spaceAbove = topY - scrollTop;
+                console.log(
+                  'Space Below:',
+                  spaceBelow,
+                  'Space Above:',
+                  spaceAbove,
+                  'Popup Height:',
+                  popupHeight
+                );
+                if (spaceBelow < popupHeight && spaceAbove > popupHeight) {
+                  // Show above, anchored to top of annotation
+                  finalY = topY - scrollTop - 10;
+                  console.log('Showing popup above annotation', finalY);
+                }
 
                 setPopupData({
                   visible: true,
-                  x: windowPoint.x - scrollLeft,
-                  y: windowPoint.y - scrollTop,
+                  x: bottomWindowPoint.x - scrollLeft,
+                  y: finalY,
                   annotation: annotation,
                 });
                 setSelectedSpecificAnnot(annotation);
@@ -579,6 +618,13 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
               style={{
                 top: popupData.y,
                 left: popupData.x,
+                display:
+                  popupData.visible &&
+                  isViewerReady &&
+                  selectedSpecificAnnot &&
+                  selectedSpecificAnnot.Subject
+                    ? 'block'
+                    : 'none',
               }}
             >
               {selectedSpecificAnnot.Subject === 'Free Text' ? (

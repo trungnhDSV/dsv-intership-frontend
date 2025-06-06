@@ -124,6 +124,7 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
               headers: { Authorization: `Bearer ${googleToken}` },
             }
           );
+          console.log('Google Drive file response:', response);
           const blob = await response.blob();
           const blobUrl = URL.createObjectURL(blob);
           console.log('Blob URL:', blobUrl);
