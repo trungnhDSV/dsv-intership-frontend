@@ -27,6 +27,7 @@ interface DataTableProps<TData, TValue> {
     fileName: string;
     uploaderEmail: string;
     currAccountEmail?: string;
+    onSuccess?: (newAccId: string) => void;
   }) => void;
   setAuthDialogOpen: (open: boolean) => void;
 }
@@ -46,7 +47,7 @@ export function DataTable<TData, TValue>({
   const router = useRouter();
   return (
     <div className='w-full h-full flex flex-col '>
-      <div className='rounded-md border'>
+      <div className='rounded-md'>
         <Table>
           <TableHeader className='bg-[#F5F5F5] h-10 sticky top-0 z-10 shadow-sm'>
             {table.getHeaderGroups().map((headerGroup) => {
@@ -82,6 +83,7 @@ export function DataTable<TData, TValue>({
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
                     onClick={() => {
+                      // @ts-expect-error: row.original type may not match FileMetadata due to generic typing
                       const data: FileMetadata = row.original;
                       if (data.googleDrive) {
                         console.log('Google Drive file clicked:', data.googleDrive);
@@ -93,6 +95,12 @@ export function DataTable<TData, TValue>({
                           setAuthDialogData({
                             fileName: data.name,
                             uploaderEmail: data.googleDrive.email,
+                            onSuccess: (newAccId) => {
+                              if (data.googleDrive?.accountId === newAccId) {
+                                console.log('Authorized with Google Drive');
+                                router.push(`/documents/${data.id}`);
+                              }
+                            },
                           });
                           setAuthDialogOpen(true);
                           return;
@@ -106,6 +114,12 @@ export function DataTable<TData, TValue>({
                             fileName: data.name,
                             uploaderEmail: data.googleDrive.email,
                             currAccountEmail: currAccountData.email,
+                            onSuccess: (newAccId) => {
+                              console.log('Reauthorized with account:', currAccountData);
+                              if (newAccId === data.googleDrive?.accountId) {
+                                router.push(`/documents/${data.id}`);
+                              }
+                            },
                           });
                           setAuthDialogOpen(true);
                           return;

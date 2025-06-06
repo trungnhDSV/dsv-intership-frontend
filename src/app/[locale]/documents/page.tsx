@@ -14,14 +14,14 @@ import { DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { handleConnectGoogleDrive } from '@/lib/actions/google-authorize';
 
+const LIMIT = 10;
+
 interface DocumentsResponse {
   data: {
     documents: FileMetadata[];
     total: number;
   };
 }
-
-const LIMIT = 10;
 
 const Documents = React.memo(
   ({
@@ -175,16 +175,15 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
     hasMore: state.hasMore,
     loadMore,
     updateDocuments,
+    totalDocs: totalDocs.current,
   };
 };
 
 const DocsPage = () => {
   const { data: session, status } = useSession();
   const loaderRef = useRef<HTMLDivElement>(null);
-  const { documents, isLoading, error, hasMore, loadMore, updateDocuments } = useDocuments(
-    session?.user?.id,
-    session
-  );
+  const { documents, isLoading, error, hasMore, loadMore, updateDocuments, totalDocs } =
+    useDocuments(session?.user?.id, session);
   const t = useTranslations('documents');
 
   const handleNewDocument = useCallback(
@@ -226,10 +225,13 @@ const DocsPage = () => {
     fileName: string;
     uploaderEmail: string;
     currAccountEmail?: string;
+    onSuccess?: (newAccId: string) => void;
   } | null>(null);
 
   if (status === 'loading')
     return <Spinner className='flex justify-center items-center h-screen' />;
+
+  console.log('Auth dialog data:', authDialogData?.onSuccess);
 
   return (
     <div className='px-6 py-6 w-full flex flex-col h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] gap-6'>
@@ -273,13 +275,17 @@ const DocsPage = () => {
       <div className='flex justify-between'>
         <div className='flex items-center'>
           <p className='text-2xl font-semibold tracking-tight pr-3'>{t('myDocuments')}</p>
-          {documents.length > 0 && (
+          {totalDocs > 0 && (
             <div className='text-[#757575] text-sm pl-3 border-l-2 border-[#E3E8EF]'>
-              {t('total')} {documents.length}
+              {t('total')} {totalDocs}
             </div>
           )}
         </div>
-        <UploadDialog session={session} onUploadSuccess={handleNewDocument} />
+        <UploadDialog
+          session={session}
+          onUploadSuccess={handleNewDocument}
+          onAuthorizeSuccess={authDialogData?.onSuccess}
+        />
       </div>
 
       <div className='h-full w-full flex border-[1px] border-[#D9D9D9] rounded-[12px] overflow-hidden'>

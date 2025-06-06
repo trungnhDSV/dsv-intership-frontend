@@ -11,12 +11,14 @@ import {
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useState } from 'react';
 
 const MainNav = () => {
   const { data: session, status } = useSession();
+  const t = useTranslations('navBar');
   const [isOpen, setIsOpen] = useState(false);
   if (status === 'loading' || !session) return null;
   return (
@@ -32,9 +34,9 @@ const MainNav = () => {
         <p className='text-[14px] ml-4'>
           {(() => {
             const hour = new Date().getHours();
-            if (hour < 12) return 'Good Morning';
-            if (hour < 18) return 'Good Afternoon';
-            return 'Good Evening';
+            if (hour < 12) return t('goodMorning');
+            if (hour < 18) return t('goodAfternoon');
+            return t('goodEvening');
           })()}
           , {session.user?.name}
         </p>
@@ -52,8 +54,8 @@ const MainNav = () => {
                 </AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-fit p-2 bg-white border-[1px] border-[#D9D9D9]'>
-              <DropdownMenuItem className='px-4 py-3'>
+            <DropdownMenuContent className='mt-3 mr-6 rounded-xl w-[196px] p-2 bg-white border-[1px] border-[#D9D9D9]'>
+              <DropdownMenuItem className='px-4 py-3 hover:bg-[#F5C731]/50 rounded-lg hover:border-none'>
                 <div className='w-[137px] text-[16px]'>
                   <SignOutBtn />
                 </div>

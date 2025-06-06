@@ -10,7 +10,7 @@
     "passwordPlaceholder": "Nhập mật khẩu",
     "mandatoryField": "Trường bắt buộc",
     "invalidSignIn": "Email hoặc mật khẩu không hợp lệ",
-    "accountExists": "Email này đã được sử dụng để đăng nhập bằng email & mật khẩu. Vui lòng đăng nhập bằng email & mật khẩu",
+    "accountExists": "Email này đang được sử dụng với tài khoản email & mật khẩu. Vui lòng đăng nhập bằng email & mật khẩu",
     "invalidEmail": "Địa chỉ email không hợp lệ",
     "invalidPassword": "Mật khẩu phải có ít nhất 8 ký tự",
     "invalidEmailOnly": "Email không hợp lệ",
@@ -21,19 +21,19 @@
     "signUpButton": "Đăng ký",
     "fullNameLabel": "Họ và tên <tag>*</tag>",
     "fullNamePlaceholder": "Nhập họ và tên",
-    "rePasswordLabel": "Nhập lại mật khẩu <tag>*</tag>",
+    "rePasswordLabel": "Xác nhận lại mật khẩu <tag>*</tag>",
     "rePasswordPlaceholder": "Nhập lại mật khẩu",
-    "accept": "Tôi chấp nhận tất cả <tag>Điều khoản dịch vụ</tag> và <tag>Chính sách bảo mật</tag>",
-    "mustAccept": "Bạn phải đồng ý với các điều khoản",
-    "mustSamePass": "Mật khẩu nhập lại không khớp",
+    "accept": "Tôi chấp nhận tất cả <tag>Điều khoản Dịch vụ</tag> và <tag>Chính sách Bảo mật</tag>",
+    "mustAccept": "Bạn phải chấp nhận các điều khoản",
+    "mustSamePass": "Mật khẩu phải giống nhau",
     "mustPassLength": "Mật khẩu phải có ít nhất 8 ký tự"
   },
   "verify": {
-    "verifyTitle": "Xác minh địa chỉ email",
-    "verifyDescription": "Chúng tôi vừa gửi một email xác minh đến {email}. Vui lòng kiểm tra hộp thư đến của bạn",
+    "verifyTitle": "Xác minh địa chỉ email của bạn",
+    "verifyDescription": "Chúng tôi vừa gửi email xác minh tới {email}. Vui lòng kiểm tra hộp thư đến",
     "resend": "Gửi lại liên kết xác minh",
     "notReceive": "Không nhận được email?",
-    "wellDone": "Chúc mừng!!",
+    "wellDone": "Hoàn thành!!",
     "successVerify": "Bạn đã xác minh email thành công.",
     "goToDocs": "Đi đến Tài liệu của tôi"
   },
@@ -41,19 +41,19 @@
     "myDocuments": "Tài liệu của tôi",
     "total": "Tổng cộng",
     "fileName": "Tên tệp",
-    "owner": "Chủ sở hữu tài liệu",
+    "owner": "Chủ sở hữu",
     "lastUpdated": "Cập nhật lần cuối",
     "noDocuments": "Không tìm thấy tài liệu nào",
     "loading": "Đang tải thêm tài liệu...",
     "you": "Bạn",
-    "uploadDocument": "Tải lên tài liệu",
-    "uploadWithFile": "Tải lên từ tệp",
+    "uploadDocument": "Tải tài liệu lên",
+    "uploadWithFile": "Tải lên bằng tệp",
     "uploadWithGoogleDrive": "Tải lên từ Google Drive",
     "uploading": "Đang tải lên..."
   },
   "home": {
     "projectName": "DI-PDF",
-    "slogan": "Một thế giới nơi việc cộng tác tài liệu trở nên nhanh chóng, thú vị và dễ dàng"
+    "slogan": "Một thế giới nơi cộng tác tài liệu trở nên nhanh chóng, thú vị và dễ dàng"
   },
   "notFoundDoc": {
     "tittle": "Bạn không có quyền truy cập tệp này",
@@ -65,5 +65,18 @@
     "share": "Chia sẻ",
     "shape": "Hình dạng",
     "type": "Loại"
+  },
+  "navBar": {
+    "goodMorning": "Chào buổi sáng",
+    "goodAfternoon": "Chào buổi chiều",
+    "goodEvening": "Chào buổi tối",
+    "logout": "Đăng xuất"
+  },
+  "toast": {
+    "uploadError": "Không thể tải tệp này lên",
+    "uploadErrorSizeDesc": "Vui lòng đảm bảo tệp tải lên không vượt quá 20MB và có định dạng .pdf",
+    "uploadErrorPasswordDesc": "Vui lòng đảm bảo tệp tải lên không yêu cầu mật khẩu",
+    "uploadSuccess": "Tải lên thành công",
+    "uploadErrorServer": "Tải lên thất bại. Vui lòng thử lại sau"
   }
 }

@@ -1,7 +1,9 @@
 // App.tsx hoặc layout.tsx hoặc component cha
 import { useEffect } from 'react';
 
-export function useListenGoogleDriveToken(onReceived: (data) => void) {
+export function useListenGoogleDriveToken(
+  onReceived: (data: { access_token: string; profile: { email: string; id: string } }) => void
+) {
   useEffect(() => {
     const handler = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;

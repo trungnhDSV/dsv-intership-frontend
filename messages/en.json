@@ -66,5 +66,18 @@
     "share": "Share",
     "shape": "Shape",
     "type": "Type"
+  },
+  "navBar": {
+    "goodMorning": "Good Morning",
+    "goodAfternoon": "Good Afternoon",
+    "goodEvening": "Good Evening",
+    "logout": "Log out"
+  },
+  "toast": {
+    "uploadError": "Cannot Upload This File",
+    "uploadErrorSizeDesc": "Please ensure the upload file is not more than 20MB and in .pdf format",
+    "uploadErrorPasswordDesc": "Please ensure the upload file does not require password",
+    "uploadSuccess": "Uploaded successfully",
+    "uploadErrorServer": "'Uploaded Failed. Please try again later"
   }
 }

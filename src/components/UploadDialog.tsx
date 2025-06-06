@@ -30,6 +30,7 @@ import { handleConnectGoogleDrive } from '@/lib/actions/google-authorize';
 interface UploadDialogProps {
   session: Session | null;
   onUploadSuccess?: (newDocs: FileMetadata) => void;
+  onAuthorizeSuccess?: (newAccId: string) => void;
 }
 
 const isGoogleTokenValid = async (token: string): Promise<boolean> => {
@@ -41,7 +42,6 @@ const isGoogleTokenValid = async (token: string): Promise<boolean> => {
     });
 
     if (res.status === 401) {
-      // Token expired or invalid
       return false;
     }
 
@@ -52,13 +52,14 @@ const isGoogleTokenValid = async (token: string): Promise<boolean> => {
   }
 };
 
-export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
+export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: UploadDialogProps) {
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations('documents');
+  const [waitingForGooglePicker, setWaitingForGooglePicker] = useState(false);
 
   // handle trigger file input
   const handleTriggerFileInput = () => {
@@ -74,7 +75,15 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
       title: 'Connected to Google Drive',
       description: `You are now connected to Google Drive as ${data.profile.email}`,
     });
-    // handleGoogleDriveUpload();
+    if (waitingForGooglePicker) {
+      handleGoogleDriveUpload();
+      setWaitingForGooglePicker(false);
+    }
+
+    if (onAuthorizeSuccess) {
+      console.log('onAuthorizeSuccess, Google Drive profile ID:', data.profile.id);
+      onAuthorizeSuccess(data.profile.id);
+    }
   });
 
   // handle upload with Google Drive
@@ -84,7 +93,6 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     if (!googleToken || !(await isGoogleTokenValid(googleToken))) {
       handleConnectGoogleDrive();
       return;
-      // let googleToken = localStorage.getItem('googleDriveToken');
     }
     if (!process.env.NEXT_PUBLIC_GOOGLE_API_KEY) {
       console.error('Missing Google API key in environment variables');
@@ -146,16 +154,16 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
     }
     if (file.size > MAX_FILE_SIZE) {
       showErrorToast({
-        title: 'Cannot Upload This File',
-        description: 'Please ensure the upload file is not more than 20MB and in .pdf format',
+        title: t('uploadError'),
+        description: t('uploadErrorSizeDesc'),
       });
       return;
     }
     const hasPassword = await checkPdfPassword(file);
     if (hasPassword) {
       showErrorToast({
-        title: 'Cannot Upload This File',
-        description: 'Please ensure the upload file does not require password',
+        title: t('uploadError'),
+        description: t('uploadErrorPasswordDesc'),
       });
       return;
     }
@@ -199,7 +207,7 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
       setIsUploading(false);
       if (xhr.status >= 200 && xhr.status < 300) {
         showSuccessToast({
-          title: 'Uploaded successfully',
+          title: t('uploadSuccess'),
         });
 
         setIsDialogOpen(false);
@@ -253,13 +261,13 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
           onUploadSuccess(result?.data);
         }
       } else {
-        toast.error('Uploaded Fail!');
+        toast.error(t('uploadErrorServer'));
       }
     });
 
     xhr.addEventListener('error', () => {
       setIsUploading(false);
-      toast.error('Lỗi kết nối!');
+      toast.error(t('uploadErrorServer'));
     });
 
     xhr.open('PUT', url, true);
@@ -307,7 +315,10 @@ export function UploadDialog({ session, onUploadSuccess }: UploadDialogProps) {
             </DropdownMenuItem>
             <DropdownMenuItem
               className='px-4 py-3 hover:bg-[#F5C731]/60 rounded-lg'
-              onClick={handleGoogleDriveUpload}
+              onClick={() => {
+                handleGoogleDriveUpload();
+                setWaitingForGooglePicker(true);
+              }}
             >
               <div className='w-fit'>{t('uploadWithGoogleDrive')}</div>
             </DropdownMenuItem>

@@ -25,7 +25,7 @@ const LanguageSwitcher = () => {
         <button
           key={lang.code}
           onClick={() => onSelectLanguage(lang.code)}
-          className={`px-4 py-2 text-sm font-medium border ${
+          className={`px-4 py-2 text-sm font-semibold border ${
             lang.code === locale
               ? 'bg-[#F5C731] text-white'
               : 'bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
