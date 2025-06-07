@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation';
 import { FileMetadata } from '@/types/types';
 import ShareDialog from '@/components/ShareDialog';
 import { useTranslations } from 'next-intl';
+import { registerTriangleAnnotation } from '@/lib/annotations/TriangleTool';
 
 interface WebViewerProps {
   initialDoc: string | null;
@@ -155,6 +156,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
         // Annotation setup
         const { documentViewer } = webViewerInstance.Core;
         const annotManager = documentViewer.getAnnotationManager();
+        await registerTriangleAnnotation(webViewerInstance);
 
         documentViewer.addEventListener('documentLoaded', async () => {
           // Disable page navigation features
@@ -212,32 +214,30 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
               if (role === 'viewer') return; // Prevent popup in viewer mode
               if (annotations.length === 1) {
                 const annotation = annotations[0];
-                const ShapeAnnotControlHeight = 295;
-                const TextAnnotControlHeight = 350;
-                const annotRect = annotation.getRect(); // PDF Coordinates, x1, y1: Top left ,x2, y2: Bottom right
+                const ShapeAnnotControlHeight = 350;
+                const TextAnnotControlHeight = 450;
+                const annotRect = annotation.getRect();
+
                 if (!annotRect) {
                   console.warn('Annotation has no valid rectangle');
                   return;
                 }
+
                 const isFreeText = annotation.Subject === 'Free Text';
                 const popupHeight = isFreeText ? TextAnnotControlHeight : ShapeAnnotControlHeight;
+                const popupWidth = 340;
+                const viewportPadding = 10;
 
                 const windowHeight = window.innerHeight;
+                const windowWidth = window.innerWidth;
+
                 const scrollEl = webViewerInstance.Core.documentViewer.getScrollViewElement();
                 const scrollLeft = scrollEl?.scrollLeft || 0;
                 const scrollTop = scrollEl?.scrollTop || 0;
+
                 const displayMode = documentViewer.getDisplayModeManager().getDisplayMode();
 
-                console.log(
-                  'Annotation selected:',
-                  annotation,
-                  'isFreeText:',
-                  isFreeText,
-                  annotRect.getTop(),
-                  annotRect.getBottom()
-                );
-
-                // Calculate top & bottom in window coordinates
+                // Calculate positions
                 const topWindowPoint = displayMode.pageToWindow(
                   { x: annotRect.x1, y: annotRect.getTop() },
                   currentPage
@@ -249,31 +249,82 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
 
                 const topY = topWindowPoint.y;
                 const bottomY = bottomWindowPoint.y;
+                console.log('Top Y:', topY, 'Bottom Y:', bottomY);
                 // Default show below annotation
-                let finalY = bottomY - scrollTop - 10;
 
-                const spaceBelow = windowHeight - bottomY - scrollTop;
-                const spaceAbove = topY - scrollTop;
-                console.log(
-                  'Space Below:',
-                  spaceBelow,
-                  'Space Above:',
-                  spaceAbove,
-                  'Popup Height:',
-                  popupHeight
-                );
-                if (spaceBelow < popupHeight && spaceAbove > popupHeight) {
-                  // Show above, anchored to top of annotation
-                  finalY = topY - scrollTop - 10;
-                  console.log('Showing popup above annotation', finalY);
+                // Khởi tạo giá trị mặc định (position dưới)
+                let finalX = bottomWindowPoint.x - scrollLeft - viewportPadding;
+                let finalY = isFreeText
+                  ? bottomY - scrollTop * zoom + 5
+                  : bottomY - scrollTop * zoom - 20;
+                let positionType = 'below';
+
+                // Tính toán không gian hiển thị
+                const spaceBelow = windowHeight - bottomY + scrollTop * zoom - viewportPadding;
+                const spaceAbove = topY - scrollTop * zoom - viewportPadding;
+                const spaceRight =
+                  windowWidth - bottomWindowPoint.x + scrollLeft * zoom - viewportPadding;
+                const spaceLeft = bottomWindowPoint.x - scrollLeft - viewportPadding;
+
+                // Logic xác định vị trí (không dùng return)
+                if (spaceBelow >= popupHeight) {
+                  // Giữ giá trị mặc định (below)
+                  positionType = 'below';
+                  console.log(
+                    'Popup position:',
+                    positionType,
+                    'spaceBelow:',
+                    spaceBelow,
+                    'popupHeight:',
+                    popupHeight
+                  );
+                } else if (spaceAbove >= popupHeight) {
+                  // Hiển thị bên trên
+                  finalY = isFreeText ? topY - scrollTop * zoom - 30 : topY - scrollTop * zoom - 20;
+                  positionType = 'above';
+                  console.log(
+                    'Popup position:',
+                    positionType,
+                    'spaceAbove:',
+                    spaceAbove,
+                    'popupHeight:',
+                    popupHeight
+                  );
+                } else if (spaceRight >= popupWidth) {
+                  // Hiển thị bên phải
+                  finalX = bottomWindowPoint.x + popupWidth - scrollLeft * zoom + viewportPadding;
+                  finalY = topY - scrollTop * zoom;
+                  positionType = 'right';
+                  console.log(
+                    'Popup position:',
+                    positionType,
+                    'spaceRight:',
+                    spaceRight,
+                    'popupWidth:',
+                    popupWidth
+                  );
+                } else if (spaceLeft >= popupWidth) {
+                  // Hiển thị bên trái
+                  finalX = bottomWindowPoint.x - scrollLeft * zoom - popupWidth - viewportPadding;
+                  finalY = topY - scrollTop * zoom;
+                  positionType = 'left';
+                  console.log(
+                    'Popup position:',
+                    positionType,
+                    'spaceLeft:',
+                    spaceLeft,
+                    'popupWidth:',
+                    popupWidth
+                  );
                 }
 
                 setPopupData({
                   visible: true,
-                  x: bottomWindowPoint.x - scrollLeft,
+                  x: finalX,
                   y: finalY,
                   annotation: annotation,
                 });
+
                 setSelectedSpecificAnnot(annotation);
                 // Update text state from selected annotation
                 if (annotation.Subject === 'Free Text') {
@@ -330,7 +381,9 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
     if (instanceRef.current && isViewerReady) {
       if (selectedAnnotation === 'shape') {
         const { documentViewer, Annotations } = instanceRef.current.Core;
+        console.log('Setting shape tool styles:', shapeState);
         const toolName = getToolNameFromShapeType(shapeState.shapeType);
+
         documentViewer.getTool(toolName).setStyles({
           StrokeThickness: shapeState.strokeWidth,
           StrokeColor: new Annotations.Color(
@@ -348,6 +401,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
         });
 
         instanceRef.current.UI.setToolMode(toolName);
+        console.log(instanceRef.current.Core.documentViewer.getToolMode());
         // Core.annotationDefaults
       } else if (selectedAnnotation === 'text') {
         const { documentViewer, Annotations } = instanceRef.current.Core;
@@ -543,6 +597,12 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
     }
   };
 
+  console.log(
+    'is selectedSpecificAnnot free text?',
+    popupData.visible,
+    selectedSpecificAnnot?.Subject === 'Free Text'
+  );
+
   return (
     <>
       {role === 'owner' && (
@@ -608,64 +668,55 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
             }}
           ></div>
         </div>
-        {popupData.visible &&
-          isViewerReady &&
-          selectedSpecificAnnot &&
-          selectedSpecificAnnot.Subject && (
-            <div
-              className='absolute z-10050'
-              ref={popupRef}
-              style={{
-                top: popupData.y,
-                left: popupData.x,
-                display:
-                  popupData.visible &&
-                  isViewerReady &&
-                  selectedSpecificAnnot &&
-                  selectedSpecificAnnot.Subject
-                    ? 'block'
-                    : 'none',
-              }}
-            >
-              {selectedSpecificAnnot.Subject === 'Free Text' ? (
-                <TextAnnotControl
-                  textState={textAnnoStateHook.textState}
-                  textOpacityInput={textAnnoStateHook.textOpacityInput}
-                  textStrokeWidthInput={textAnnoStateHook.textStrokeWidthInput}
-                  setTextInputOnSubmit={textAnnoStateHook.setTextInputOnSubmit}
-                  setTextInputIsEdit={textAnnoStateHook.setTextInputIsEdit}
-                  setTextInputChange={textAnnoStateHook.setTextInputChange}
-                  setFontFamily={textAnnoStateHook.setFontFamily}
-                  setFontSize={textAnnoStateHook.setFontSize}
-                  setTextColor={textAnnoStateHook.setTextColor}
-                  setTextStrokeColor={textAnnoStateHook.setTextStrokeColor}
-                  setTextStrokeWidth={textAnnoStateHook.setTextStrokeWidth}
-                  setTextOpacity={textAnnoStateHook.setTextOpacity}
-                  setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
-                  setTextFillColor={textAnnoStateHook.setTextFillColor}
-                  forSpecificAnnot={true}
-                  handleDeleteAnnotation={handleDeleteAnnotation}
-                />
-              ) : (
-                <ShapeAnnotControl
-                  shapeState={shapeAnnoStateHook.shapeState}
-                  shapeOpacityInput={shapeAnnoStateHook.shapeOpacityInput}
-                  shapeStrokeWidthInput={shapeAnnoStateHook.shapeStrokeWidthInput}
-                  setShapeInputOnSubmit={shapeAnnoStateHook.setShapeInputOnSubmit}
-                  setShapeInputIsEdit={shapeAnnoStateHook.setShapeInputIsEdit}
-                  setShapeInputChange={shapeAnnoStateHook.setShapeInputChange}
-                  setShapeType={shapeAnnoStateHook.setShapeType}
-                  setShapeStrokeColor={shapeAnnoStateHook.setShapeStrokeColor}
-                  setShapeStrokeWidth={shapeAnnoStateHook.setShapeStrokeWidth}
-                  setShapeFillColor={shapeAnnoStateHook.setShapeFillColor}
-                  setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
-                  setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
-                  forSpecificAnnot={true}
-                  handleDeleteAnnotation={handleDeleteAnnotation}
-                />
-              )}
-            </div>
-          )}
+        {popupData.visible && selectedSpecificAnnot && (
+          <div
+            className='absolute z-10050'
+            ref={popupRef}
+            style={{
+              top: popupData.y,
+              left: popupData.x,
+              display: 'block',
+            }}
+          >
+            {selectedSpecificAnnot.Subject === 'Free Text' ? (
+              <TextAnnotControl
+                textState={textAnnoStateHook.textState}
+                textOpacityInput={textAnnoStateHook.textOpacityInput}
+                textStrokeWidthInput={textAnnoStateHook.textStrokeWidthInput}
+                setTextInputOnSubmit={textAnnoStateHook.setTextInputOnSubmit}
+                setTextInputIsEdit={textAnnoStateHook.setTextInputIsEdit}
+                setTextInputChange={textAnnoStateHook.setTextInputChange}
+                setFontFamily={textAnnoStateHook.setFontFamily}
+                setFontSize={textAnnoStateHook.setFontSize}
+                setTextColor={textAnnoStateHook.setTextColor}
+                setTextStrokeColor={textAnnoStateHook.setTextStrokeColor}
+                setTextStrokeWidth={textAnnoStateHook.setTextStrokeWidth}
+                setTextOpacity={textAnnoStateHook.setTextOpacity}
+                setTextRadioGroup={textAnnoStateHook.setTextRadioGroup}
+                setTextFillColor={textAnnoStateHook.setTextFillColor}
+                forSpecificAnnot={true}
+                handleDeleteAnnotation={handleDeleteAnnotation}
+              />
+            ) : (
+              <ShapeAnnotControl
+                shapeState={shapeAnnoStateHook.shapeState}
+                shapeOpacityInput={shapeAnnoStateHook.shapeOpacityInput}
+                shapeStrokeWidthInput={shapeAnnoStateHook.shapeStrokeWidthInput}
+                setShapeInputOnSubmit={shapeAnnoStateHook.setShapeInputOnSubmit}
+                setShapeInputIsEdit={shapeAnnoStateHook.setShapeInputIsEdit}
+                setShapeInputChange={shapeAnnoStateHook.setShapeInputChange}
+                setShapeType={shapeAnnoStateHook.setShapeType}
+                setShapeStrokeColor={shapeAnnoStateHook.setShapeStrokeColor}
+                setShapeStrokeWidth={shapeAnnoStateHook.setShapeStrokeWidth}
+                setShapeFillColor={shapeAnnoStateHook.setShapeFillColor}
+                setShapeOpacity={shapeAnnoStateHook.setShapeOpacity}
+                setShapeRadioGroup={shapeAnnoStateHook.setShapeRadioGroup}
+                forSpecificAnnot={true}
+                handleDeleteAnnotation={handleDeleteAnnotation}
+              />
+            )}
+          </div>
+        )}
 
         {/* Controls Bar */}
         <div className='flex items-center justify-center py-3 px-2 gap-2 bg-white border-t border-[#D9D9D9] h-fit'>

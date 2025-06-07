@@ -1,14 +1,9 @@
 import { useTextAnnotationState } from '@/app/hooks/useAnnotText';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { COLOR_OPTIONS, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS } from '@/constants/UI';
 import { isSameColor, rgbToString } from '@/lib/annotations/annotationStyle';
 import { cn } from '@/lib/utils';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import React from 'react';
@@ -50,14 +45,15 @@ const TextAnnotControl = ({
   forSpecificAnnot = false,
   handleDeleteAnnotation,
 }: TextAnnotControlProps) => {
+  console.log('TextAnnotControl rendered', forSpecificAnnot);
   return (
-    <DropdownMenu defaultOpen={forSpecificAnnot}>
-      <DropdownMenuTrigger>
-        {forSpecificAnnot ? <></> : <ChevronDown className='w-5 h-5' />}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
+    <Popover defaultOpen={forSpecificAnnot}>
+      <PopoverTrigger>
+        {forSpecificAnnot ? <span /> : <ChevronDown className='w-5 h-5' />}
+      </PopoverTrigger>
+      <PopoverContent
         align='end'
-        className='my-3 bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg pt-4 overflow-hidden'
+        className='bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg pt-4 overflow-hidden'
       >
         <div>
           <div className='flex flex-col gap-4'>
@@ -65,8 +61,8 @@ const TextAnnotControl = ({
               <p className='text-sm'>Text style</p>
               <div className='flex gap-2'>
                 <div className='flex-1 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center overflow-hidden'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className='p-4 flex-1 flex items-center bg-white w-full h-full'>
+                  <Popover>
+                    <PopoverTrigger className='p-4 flex-1 flex items-center bg-white w-full h-full'>
                       <span
                         className={cn(
                           'flex-1 text-start',
@@ -76,14 +72,17 @@ const TextAnnotControl = ({
                         {textState.fontFamily}
                       </span>
                       <ChevronDown className='w-4 h-4' />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
+                    </PopoverTrigger>
+                    <PopoverContent
                       align='end'
                       className='z-100 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
                       key={'fontFamily'}
+                      side='bottom'
+                      sideOffset={4}
+                      collisionPadding={10}
                     >
                       {FONT_FAMILY_OPTIONS.map((option) => (
-                        <DropdownMenuItem
+                        <div
                           key={option.value}
                           onClick={() => setFontFamily(option.value)}
                           className={cn(
@@ -93,23 +92,23 @@ const TextAnnotControl = ({
                           )}
                         >
                           {option.label}
-                        </DropdownMenuItem>
+                        </div>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className='w-[100px] h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center overflow-hidden'>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className='flex p-4 items-center bg-white w-full h-full'>
+                  <Popover>
+                    <PopoverTrigger className='flex p-4 items-center bg-white w-full h-full'>
                       <span className='flex-1'>{textState.fontSize} pt</span>
                       <ChevronDown className='w-4 h-4' />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
+                    </PopoverTrigger>
+                    <PopoverContent
                       key={'fontsize'}
                       className='z-100 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
                     >
                       {FONT_SIZE_OPTIONS.map((option) => (
-                        <DropdownMenuItem
+                        <div
                           key={option.value}
                           onClick={() => setFontSize(option.value)}
                           className={cn(
@@ -118,10 +117,10 @@ const TextAnnotControl = ({
                           )}
                         >
                           {option.label}
-                        </DropdownMenuItem>
+                        </div>
                       ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               {/* COLOR */}
@@ -340,8 +339,8 @@ const TextAnnotControl = ({
             )}
           </div>
         </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </PopoverContent>
+    </Popover>
   );
 };
 

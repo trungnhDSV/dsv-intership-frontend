@@ -23,6 +23,12 @@ export async function registerTriangleAnnotation(instance: WebViewerInstance) {
     .getAnnotationManager()
     .registerAnnotationType(TriangleAnnotation.prototype.elementName, TriangleAnnotation);
 
+  console.log('Registering TriangleAnnotation');
+  console.log('TriangleAnnotation:', TriangleAnnotation);
+  console.log('SelectionModel:', TriangleSelectionModel);
+  console.log('Tool object:', new TriangleCreateTool(documentViewer));
+  console.log('elementName:', TriangleAnnotation.prototype.elementName);
+
   // Đăng ký tool với WebViewer UI
   instance.UI.registerTool(
     {
