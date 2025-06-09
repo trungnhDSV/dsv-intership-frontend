@@ -1,12 +1,11 @@
 'use client';
-import { columns } from '@/app/[locale]/documents/column';
+import { getColumns } from '@/app/[locale]/documents/column';
 import { DataTable } from '@/components/data-table';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { UploadDialog } from '@/components/UploadDialog';
 import type { FileMetadata } from '@/types/types';
-import { Session } from 'next-auth';
 import { useTranslations } from 'next-intl';
 import { Spinner } from '@/components/ui/spinner';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
@@ -30,6 +29,7 @@ const Documents = React.memo(
     t,
     setAuthDialogData,
     setAuthDialogOpen,
+    handleSorting,
   }: {
     data: FileMetadata[];
     currUser: string;
@@ -40,6 +40,7 @@ const Documents = React.memo(
       currAccountEmail?: string;
     }) => void;
     setAuthDialogOpen: (open: boolean) => void;
+    handleSorting: () => void;
   }) => {
     const processedData = useMemo(() => {
       return data.map((doc) => ({
@@ -51,7 +52,7 @@ const Documents = React.memo(
     return (
       <div className='flex-1'>
         <DataTable<FileMetadata, unknown>
-          columns={columns}
+          columns={getColumns({ handleSorting })}
           data={processedData}
           setAuthDialogData={setAuthDialogData}
           setAuthDialogOpen={setAuthDialogOpen}
@@ -63,7 +64,11 @@ const Documents = React.memo(
 
 Documents.displayName = 'Documents';
 
-const useDocuments = (userId: string | null | undefined, session: Session | null) => {
+const useDocuments = (
+  userId: string | null | undefined,
+  accessToken: string | null | undefined,
+  sortOrd: 'asc' | 'desc'
+) => {
   const [state, setState] = useState({
     documents: [] as FileMetadata[],
     offset: 0,
@@ -75,7 +80,8 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
 
   const fetchDocuments = useCallback(
     async (reset = false) => {
-      if (!userId || state.isLoading) return;
+      if (!userId) return;
+      if (!accessToken) return;
 
       setState((prev) => ({
         ...prev,
@@ -84,6 +90,14 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
         ...(reset ? { documents: [], offset: 0, hasMore: true } : {}),
       }));
 
+      let currentOffset = 0;
+      let prevDocuments: FileMetadata[] = [];
+      setState((prev) => {
+        currentOffset = reset ? 0 : prev.offset;
+        prevDocuments = reset ? [] : prev.documents;
+        return prev;
+      });
+
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/documents/count?ownerId=${userId}`,
@@ -91,7 +105,7 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              authorization: `Bearer ${session?.accessToken || ''}`,
+              authorization: `Bearer ${accessToken || ''}`,
             },
           }
         );
@@ -108,15 +122,13 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
       }
 
       try {
-        const currentOffset = reset ? 0 : state.offset;
-        console.log('Fetching documents with offset:', currentOffset);
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/documents?ownerId=${userId}&limit=${LIMIT}&offset=${currentOffset}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/documents?ownerId=${userId}&limit=${LIMIT}&offset=${currentOffset}&sortOrder=${sortOrd}`,
           {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-              authorization: `Bearer ${session?.accessToken || ''}`,
+              authorization: `Bearer ${accessToken || ''}`,
             },
           }
         );
@@ -124,13 +136,28 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
         if (!res.ok) throw new Error('Failed to fetch documents');
 
         const data: DocumentsResponse = await res.json();
-        const { documents: newDocs, total } = data.data;
-        console.log('total documents fetched:', total);
-        const existingIds = new Set(state.documents.map((doc) => doc.id));
-        const filteredNewDocs = newDocs.filter((doc) => !existingIds.has(doc.id));
+        const { documents: newDocs } = data.data;
+
+        // Lọc duplicate
+        const mergedDocs = reset
+          ? newDocs
+          : [
+              ...prevDocuments,
+              ...newDocs.filter((doc) => !prevDocuments.some((d) => d.id === doc.id)),
+            ];
+
+        console.log(
+          'Fetched documents:',
+          newDocs.length,
+          'Total:',
+          mergedDocs.length,
+          'totalDocs:',
+          totalDocs.current
+        );
 
         setState((prev) => ({
-          documents: reset ? newDocs : [...prev.documents, ...newDocs],
+          ...prev,
+          documents: mergedDocs,
           offset: currentOffset + newDocs.length,
           hasMore: currentOffset + newDocs.length < totalDocs.current,
           isLoading: false,
@@ -144,10 +171,11 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
         }));
       }
     },
-    [userId, state.offset, state.isLoading, state.documents, session]
+    [userId, accessToken, sortOrd]
   );
 
   const loadMore = useCallback(() => {
+    console.log('Checking if more documents can be loaded...', state.hasMore, state.isLoading);
     if (state.hasMore && !state.isLoading) {
       console.log('Loading more documents...');
       fetchDocuments();
@@ -160,6 +188,11 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
     hasFetched.current = true;
     fetchDocuments(true);
   }, [userId, fetchDocuments]);
+
+  useEffect(() => {
+    if (!userId) return;
+    fetchDocuments(true); // reset lại documents mỗi khi sortOrd đổi hoặc user đổi
+  }, [userId, sortOrd, fetchDocuments]);
 
   const updateDocuments = useCallback((updater: (prev: FileMetadata[]) => FileMetadata[]) => {
     setState((prev) => ({
@@ -182,13 +215,18 @@ const useDocuments = (userId: string | null | undefined, session: Session | null
 const DocsPage = () => {
   const { data: session, status } = useSession();
   const loaderRef = useRef<HTMLDivElement>(null);
+  const [sortOrd, setSortOrd] = useState<'asc' | 'desc'>('desc');
+
+  const userId = session?.user?.id;
+  const accessToken = session?.accessToken;
+
   const { documents, isLoading, error, hasMore, loadMore, updateDocuments, totalDocs } =
-    useDocuments(session?.user?.id, session);
+    useDocuments(userId, accessToken, sortOrd);
   const t = useTranslations('documents');
 
   const handleNewDocument = useCallback(
     (newDoc: FileMetadata) => {
-      updateDocuments((prev) => [newDoc, ...prev]);
+      updateDocuments((prev) => (sortOrd === 'desc' ? [newDoc, ...prev] : [...prev, newDoc]));
     },
     [updateDocuments]
   );
@@ -228,16 +266,19 @@ const DocsPage = () => {
     onSuccess?: (newAccId: string) => void;
   } | null>(null);
 
-  if (status === 'loading')
+  if (status === 'loading' && !session) {
+    console.log('Session is loading...');
     return <Spinner className='flex justify-center items-center h-screen' />;
+  }
 
-  console.log('Auth dialog data:', authDialogData?.onSuccess);
+  const handleSorting = () => {
+    setSortOrd((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
 
   return (
     <div className='px-6 py-6 w-full flex flex-col h-[calc(100vh-64px)] max-h-[calc(100vh-64px)] gap-6'>
       <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
         <DialogContent className='z-1000000'>
-          {/* <div className='fixed inset-0 bg-black/70 backdrop-blur-sm z-[-1]' /> */}
           <DialogHeader>
             <DialogTitle>Google Drive Authorization Required</DialogTitle>
             <DialogDescription className='text-center pt-4'>
@@ -289,13 +330,14 @@ const DocsPage = () => {
       </div>
 
       <div className='h-full w-full flex border-[1px] border-[#D9D9D9] rounded-[12px] overflow-hidden'>
-        {isLoading ? (
+        {isLoading && documents.length === 0 ? (
           <div className='flex-1 flex justify-center items-center'>
             <Spinner className='flex justify-center items-center h-full w-full' />
           </div>
         ) : documents.length > 0 ? (
           <div className='overflow-auto scroll-container flex-1'>
             <Documents
+              handleSorting={handleSorting}
               data={documents}
               currUser={session?.user?.name || ''}
               t={t}
@@ -303,7 +345,11 @@ const DocsPage = () => {
               setAuthDialogOpen={setAuthDialogOpen}
             />
             {hasMore && <div ref={loaderRef} className='h-10' />}
-            {isLoading && <div className='p-4 text-center'>{t('loading')}</div>}
+            {isLoading && (
+              <div className='p-4 text-center'>
+                <Spinner size='small' />
+              </div>
+            )}
           </div>
         ) : (
           <div className='flex-1 flex items-center justify-center'>

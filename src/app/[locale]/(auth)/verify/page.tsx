@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import VerifyNav from '@/components/VerifyNav';
 import { NavbarHeight } from '@/constants/UI';
 import { signIn } from 'next-auth/react';
@@ -35,15 +36,15 @@ export default function VerifyPage() {
         const data = await res.json();
 
         const verifiedToken = data.data.token;
-        const login = await signIn('magic-link', {
+        await signIn('magic-link', {
           redirect: false,
           token: verifiedToken,
           callbackUrl: '/documents',
         });
 
-        if (login?.ok) {
-          router.push('/documents'); // hoặc bất kỳ route nào
-        }
+        // if (login?.ok) {
+        //   router.push('/documents'); // hoặc bất kỳ route nào
+        // }
       } catch (err) {
         setStatus('error');
       }
@@ -57,6 +58,16 @@ export default function VerifyPage() {
     return null;
   }
 
+  const handleNavigate = () => {
+    console.log('Navigate to documents');
+    router.push('/documents');
+  };
+
+  if (status === 'error') {
+    // Return Next.js 404 page
+    return router.push('/404');
+  }
+
   return (
     <div className='flex w-screen h-screen'>
       <VerifyNav />
@@ -65,25 +76,25 @@ export default function VerifyPage() {
         style={{ marginTop: `${NavbarHeight}px` }}
       >
         {status === 'pending' && <Loading />}
-        {status === 'success' && <VerifySuccess />}
-        {status === 'error' && <ErrorUI />}
+        {status === 'success' && <VerifySuccess handleNavigate={handleNavigate} />}
       </div>
     </div>
   );
 }
 
-const ErrorUI = () => {
-  return <>fail</>;
-};
-
 const Loading = () => {
-  return <>Is Loading</>;
+  return (
+    <div className='w-screen h-screen flex items-center justify-center'>
+      <Spinner size='large' />
+    </div>
+  );
 };
 
-const VerifySuccess = () => {
+const VerifySuccess = ({ handleNavigate }: { handleNavigate: () => void }) => {
   return (
     <div className='flex items-center justify-center flex-col gap-6 w-fit'>
       <Image
+        priority={true}
         src={'/verify-success.png'}
         width={1000}
         height={1000}
@@ -92,7 +103,9 @@ const VerifySuccess = () => {
       />
       <p className='font-bold text-[32px]'>Well done!!</p>
       <p>You have verifies your email successfully</p>
-      <Button className='bg-[#F5C731] w-full'>Go To My Document</Button>
+      <Button className='bg-[#F5C731] w-full' onClick={handleNavigate}>
+        Go To My Document
+      </Button>
     </div>
   );
 };

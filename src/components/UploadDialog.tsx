@@ -59,6 +59,7 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations('documents');
+  const tToast = useTranslations('toast');
   const [waitingForGooglePicker, setWaitingForGooglePicker] = useState(false);
 
   // handle trigger file input
@@ -155,16 +156,16 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
     }
     if (file.size > MAX_FILE_SIZE) {
       showErrorToast({
-        title: t('uploadError'),
-        description: t('uploadErrorSizeDesc'),
+        title: tToast('uploadError'),
+        description: tToast('uploadErrorSizeDesc'),
       });
       return;
     }
     const hasPassword = await checkPdfPassword(file);
     if (hasPassword) {
       showErrorToast({
-        title: t('uploadError'),
-        description: t('uploadErrorPasswordDesc'),
+        title: tToast('uploadError'),
+        description: tToast('uploadErrorPasswordDesc'),
       });
       return;
     }
@@ -208,7 +209,7 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
       setIsUploading(false);
       if (xhr.status >= 200 && xhr.status < 300) {
         showSuccessToast({
-          title: t('uploadSuccess'),
+          title: tToast('uploadSuccess'),
         });
 
         setIsDialogOpen(false);

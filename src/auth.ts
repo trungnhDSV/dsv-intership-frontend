@@ -134,6 +134,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.token = data.data.token;
           return true;
         } catch (error) {
+          console.error('Google sign-in error:', error);
           return '/sign-in?error=email-exists';
         }
       }

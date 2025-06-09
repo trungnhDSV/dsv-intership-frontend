@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  getSortedRowModel,
-} from '@tanstack/react-table';
+import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
 
 import {
   Table,
@@ -42,7 +36,6 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
   const router = useRouter();
   return (
@@ -86,7 +79,6 @@ export function DataTable<TData, TValue>({
                       // @ts-expect-error: row.original type may not match FileMetadata due to generic typing
                       const data: FileMetadata = row.original;
                       if (data.googleDrive) {
-                        console.log('Google Drive file clicked:', data.googleDrive);
                         const currAccountData = JSON.parse(
                           localStorage.getItem('googleDriveProfile') || '{}'
                         );
@@ -105,7 +97,6 @@ export function DataTable<TData, TValue>({
                           setAuthDialogOpen(true);
                           return;
                         }
-                        console.log('Current account data:', currAccountData);
                         if (currAccountData.id === data.googleDrive.accountId) {
                           router.push(`/documents/${data.id}`);
                         } else {
@@ -115,7 +106,6 @@ export function DataTable<TData, TValue>({
                             uploaderEmail: data.googleDrive.email,
                             currAccountEmail: currAccountData.email,
                             onSuccess: (newAccId) => {
-                              console.log('Reauthorized with account:', currAccountData);
                               if (newAccId === data.googleDrive?.accountId) {
                                 router.push(`/documents/${data.id}`);
                               }

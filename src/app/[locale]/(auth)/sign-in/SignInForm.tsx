@@ -64,7 +64,12 @@ const SignInForm = () => {
             ref={formRef}
             action={formAction}
             className='flex flex-col gap-4'
-            onSubmit={() => setIsLoading(true)}
+            onSubmit={() => {
+              setIsLoading(true);
+              const url = new URL(window.location.href);
+              url.searchParams.delete('error');
+              window.history.replaceState({}, '', url);
+            }}
           >
             <div>
               <p className='mb-1'>
