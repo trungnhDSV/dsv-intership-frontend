@@ -14,6 +14,7 @@ const DocPage = () => {
   const [url, setUrl] = useState<string | null>(null);
   const [role, setRole] = useState<'owner' | 'viewer' | 'editor' | null>('owner');
   const [loading, setLoading] = useState(true);
+  const [docNotFound, setDocNotFound] = useState(false);
   // Fetch document data
   useEffect(() => {
     if (!id || !session) return;
@@ -26,7 +27,13 @@ const DocPage = () => {
           },
         });
         if (!s3KeyRes.ok) {
-          throw new Error('Failed to fetch document data');
+          const errorData = await s3KeyRes.json();
+          // throw new Error(errorData.message || 'Failed to fetch document data');
+          if (errorData.message === 'Document not found') {
+            setLoading(false);
+            setDocNotFound(true);
+            return;
+          }
         }
         const docData = await s3KeyRes.json();
         setDoc(docData.data);
@@ -75,6 +82,14 @@ const DocPage = () => {
     ),
     [url, doc, session?.accessToken, role]
   );
+
+  if (docNotFound) {
+    return (
+      <div className='pt-6 pb-4 px-6 w-full flex flex-col h-[calc(100vh-64px)] relative'>
+        <NotFound email={session?.user?.email} is404={true} />
+      </div>
+    );
+  }
 
   if (!loading && role === null) {
     return (

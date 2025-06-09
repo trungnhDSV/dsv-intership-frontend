@@ -53,7 +53,7 @@ const TextAnnotControl = ({
       </PopoverTrigger>
       <PopoverContent
         align='end'
-        className='bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg pt-4 overflow-hidden'
+        className='bg-[#F5F5F5] border-[1px] border-[#D9D9D9] shadow-md w-[324px] rounded-lg pt-4 overflow-hidden z-100000000'
       >
         <div>
           <div className='flex flex-col gap-4'>

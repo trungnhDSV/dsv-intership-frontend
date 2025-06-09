@@ -58,6 +58,7 @@
   },
   "notFoundDoc": {
     "tittle": "You don't have permission to access this file",
+    "title404": "This document does not exist",
     "desc": "You are signed in as",
     "backToHome": "Back to my document"
   },

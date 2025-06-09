@@ -16,8 +16,9 @@ import {
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 import { X } from 'lucide-react';
+import { init } from 'next/dist/compiled/webpack/webpack';
 import Image from 'next/image';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const isValidEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -99,12 +100,17 @@ interface ShareDialogProps {
   handleClose: () => void;
 }
 const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogProps) => {
-  const [draftList, setDraftList] = React.useState<UserTagData[]>([]);
-  const [addedList, setAddedList] = React.useState<UserTagData[]>([]);
-  const [foundUser, setFoundUser] = React.useState<UserTagData | null>(null);
-  const [isAdding, setIsAdding] = React.useState(false);
-  const [isDraftListEmpty, setIsDraftListEmpty] = React.useState(true);
-  const [role, setRole] = React.useState<'editor' | 'viewer'>('viewer');
+  const [draftList, setDraftList] = useState<UserTagData[]>([]);
+  const [addedList, setAddedList] = useState<UserTagData[]>([]);
+  const initAddedList = useRef<UserTagData[]>([]);
+
+  const [foundUser, setFoundUser] = useState<UserTagData | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isDraftListEmpty, setIsDraftListEmpty] = useState(true);
+  const [role, setRole] = useState<'editor' | 'viewer'>('viewer');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [addListChanged, setAddListChanged] = useState(false);
+
   const handleInputChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
     accessToken: string | undefined | null
@@ -131,6 +137,13 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
     }
   };
 
+  const handleAddedListRoleChange = (email: string, newRole: 'editor' | 'viewer' | 'Remove') => {
+    setAddedList((prev) =>
+      prev.map((user) => (user.email === email ? { ...user, role: newRole } : user))
+    );
+    setAddListChanged(true);
+  };
+
   useEffect(() => {
     const fetchInitialUsers = async () => {
       if (!docData?.id || !accessToken) return;
@@ -138,6 +151,7 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
         const users = await fetchAddedUsers(docData.id, accessToken);
         console.log('Initial added users:', users);
         setAddedList(users);
+        initAddedList.current = users;
       } catch (error) {
         console.error('Error fetching initial added users:', error);
       }
@@ -162,70 +176,152 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
     }
   }, [role]);
 
-  const handleSave = async (
+  const handleSaveForAddedList = async (
+    docId: string | undefined,
+    addedList: UserTagData[],
+    accessToken: string | null | undefined
+  ) => {
+    if (!accessToken || !docId) return;
+    const usersToUpdate = addedList.filter((u) => u.role !== 'owner' && u.role !== 'Remove');
+    const usersToRemove = addedList.filter((u) => u.role === 'Remove');
+
+    for (const user of usersToRemove) {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members/${user.id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to remove user from document');
+        }
+        // Remove from addedList state
+        setAddedList((prev) => prev.filter((u) => u.email !== user.email));
+        initAddedList.current = initAddedList.current.filter((u) => u.email !== user.email);
+      } catch (error) {
+        console.error('Error removing user from document:', error);
+      }
+    }
+
+    for (const user of usersToUpdate) {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members/${user.id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              role: user.role,
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error('Failed to PATCH user');
+        }
+
+        // Update the addedList state with the new role
+        setAddedList((prev) =>
+          prev.map((u) => (u.email === user.email ? { ...u, role: user.role } : u))
+        );
+        initAddedList.current = initAddedList.current.map((u) =>
+          u.email === user.email ? { ...u, role: user.role } : u
+        );
+      } catch (error) {
+        console.error('Error PATCH user:', error);
+      }
+    }
+    // successfully added all users
+    console.log('Successfully added users to document:', docId);
+    setAddListChanged(false);
+    showSuccessToast({
+      title: 'Permissions updated successfully',
+    });
+  };
+
+  const handleSaveForDraftList = async (
     docId: string | undefined,
     draftList: UserTagData[],
     addedList: UserTagData[],
     accessToken: string | null | undefined
   ) => {
     if (!accessToken || !docId) return;
+    console.log('ADDED LIST:', addedList);
     for (const user of draftList) {
-      if (addedList.includes(user)) {
+      if (addedList.some((u) => u.email === user.email)) {
+        console.log('User already exists in added list:', user.email);
         // check role
         const existingUser = addedList.find((u) => u.email === user.email);
-        if (existingUser && existingUser.role !== user.role) {
-          // Update role if it has changed
-          try {
-            const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members/${user.id}`,
-              {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({ role: user.role }),
+        if (existingUser) {
+          if (existingUser.role !== user.role)
+            // Update role if it has changed
+            try {
+              const res = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members/${existingUser.id}`,
+                {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                  body: JSON.stringify({ role: user.role }),
+                }
+              );
+              if (!res.ok) {
+                throw new Error('Failed to update user role');
               }
-            );
-            if (!res.ok) {
-              throw new Error('Failed to update user role');
+              setAddedList((prev) =>
+                prev.map((u) => (u.email === user.email ? { ...u, role: user.role } : u))
+              );
+              initAddedList.current = initAddedList.current.map((u) =>
+                u.email === user.email ? { ...u, role: user.role } : u
+              );
+              continue;
+            } catch (error) {
+              console.error('Error updating user role:', error);
             }
-            continue;
-          } catch (error) {
-            console.error('Error updating user role:', error);
-          }
         }
-      }
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            role: user.role,
-          }),
-        });
+      } else
+        try {
+          console.log('Adding user to document:', user.email);
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              role: user.role,
+            }),
+          });
 
-        if (!res.ok) {
-          throw new Error('Failed to add user to document');
+          if (!res.ok) {
+            throw new Error('Failed to add user to document');
+          }
+          setAddedList((prev) => [...prev, ...draftList]);
+        } catch (error) {
+          console.error('Error adding user to document:', error);
         }
-      } catch (error) {
-        console.error('Error adding user to document:', error);
-      }
     }
     // successfully added all users
     console.log('Successfully added users to document:', docId);
-    setAddedList((prev) => [...prev, ...draftList]);
     showSuccessToast({
       title: 'Permissions updated successfully',
     });
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
+    <Dialog open={isOpen}>
       <DialogContent className='w-[640px] min-w-[640px] h-[398px] py-8 flex flex-col gap-6'>
         {/* Header cố định */}
         <div className='px-8 flex flex-col gap-4 h-fit'>
@@ -233,7 +329,11 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
             Share &quot;{docData?.name}&quot;
           </DialogTitle>
           <div>
-            <Input placeholder='Add people' onChange={(e) => handleInputChange(e, accessToken)} />
+            <Input
+              placeholder='Add people'
+              ref={inputRef}
+              onChange={(e) => handleInputChange(e, accessToken)}
+            />
           </div>
         </div>
 
@@ -241,9 +341,7 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
         <div
           className={cn(
             'flex-1 pl-8 pr-8 h-full overflow-y-scroll',
-            draftList.length > 0 &&
-              !(isAdding && foundUser) &&
-              'grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(1fr,2fr))]'
+            draftList.length > 0 && !(isAdding && foundUser) && 'flex flex-col gap-2'
           )}
         >
           {/* List added user */}
@@ -251,9 +349,15 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
             <div
               className='w-full'
               onClick={() => {
-                setDraftList((prev) => [...prev, foundUser]);
+                setDraftList((prev) => {
+                  if (prev.some((u) => u.email === foundUser.email)) {
+                    return prev; // User already exists in draft list
+                  }
+                  return [...prev, foundUser];
+                });
                 setFoundUser(null);
                 setIsAdding(false);
+                if (inputRef.current) inputRef.current.value = '';
               }}
             >
               <UserTag
@@ -274,15 +378,19 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
               />
             ))
           ) : (
-            addedList.map((user) => (
-              <UserTag
-                key={user.email}
-                email={user.email}
-                name={user.name}
-                role={user.role}
-                id={user.id}
-              />
-            ))
+            <div className='w-full flex flex-col gap-6'>
+              {addedList.map((user) => (
+                <UserTag
+                  key={user.email}
+                  email={user.email}
+                  name={user.name}
+                  role={user.role}
+                  id={user.id}
+                  forAddedList={true}
+                  handleRoleChange={handleAddedListRoleChange}
+                />
+              ))}
+            </div>
           )}
         </div>
 
@@ -295,64 +403,33 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
           {!isDraftListEmpty && (
             <div className='text-xs text-[#1E1E1E]'>
               <span className='mr-[6px]'>People invited</span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className='text-xs text-[#1E1E1E] p-1 font-semibold'>
-                    {role === 'editor' ? 'Can edit' : 'Can view'}
-                    <Image
-                      src='/icons/dropdown-trigger.svg'
-                      alt='chevron down'
-                      width={16}
-                      height={16}
-                      className='inline-block ml-1'
-                    />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className='w-fit rounded-2xl bg-white shadow-lg'
-                  side='top'
-                  align='start'
-                >
-                  <DropdownMenuRadioGroup
-                    value={role}
-                    onValueChange={(value) => setRole(value as 'editor' | 'viewer')}
-                    className='text-[#1E1E1E] w-[185px] p-2 '
-                  >
-                    <DropdownMenuRadioItem
-                      value='editor'
-                      className={cn(
-                        'w-full py-3 px-4 rounded-2xl',
-                        role === 'editor' && 'bg-[#D9D9D9]'
-                      )}
-                    >
-                      Can edit
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem
-                      value='viewer'
-                      className={cn(
-                        'w-full py-3 px-4 rounded-2xl',
-                        role === 'viewer' && 'bg-[#D9D9D9]'
-                      )}
-                    >
-                      Can view
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <RoleDropdownMenu role={role} setRoleForAdded={setRole} forAddNew={true} />
             </div>
           )}
 
           <div>
             <Button
-              className='bg-[#E3E3E3] px-[13.5px] py-3 text-[#1E1E1E] mr-4'
-              onClick={handleClose}
+              className='bg-[#E3E3E3] px-[13.5px] py-3 text-[#1E1E1E] mr-4 hover:bg-[#D9D9D9]'
+              onClick={() => {
+                handleClose();
+                // Reset all states
+                setAddedList(initAddedList.current);
+                setDraftList([]);
+                setIsAdding(false);
+                setFoundUser(null);
+                setRole('viewer');
+                setIsDraftListEmpty(true);
+              }}
             >
               Cancel
             </Button>
             <Button
               className='bg-[#2C2C2C] px-[13.5px] py-3 text-[#F5F5F5]'
+              disabled={draftList.length === 0 && !addListChanged}
               onClick={() => {
-                handleSave(docData?.id, draftList, addedList, accessToken);
+                if (draftList.length === 0)
+                  handleSaveForAddedList(docData?.id, addedList, accessToken);
+                else handleSaveForDraftList(docData?.id, draftList, addedList, accessToken);
                 setDraftList([]);
                 setIsAdding(false);
                 setFoundUser(null);
@@ -361,7 +438,7 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
                 handleClose();
               }}
             >
-              Save
+              Add
             </Button>
           </div>
         </div>
@@ -394,11 +471,14 @@ const Chip = ({
 interface UserTagData {
   email: string;
   name: string;
-  role: 'owner' | 'editor' | 'viewer';
+  role: 'owner' | 'editor' | 'viewer' | 'Remove';
   id: string;
+  forAddedList?: boolean;
+  handleRoleChange?: (email: string, newRole: 'editor' | 'viewer' | 'Remove') => void;
 }
 
-const UserTag = ({ name, role, email }: UserTagData) => {
+const UserTag = ({ name, role, email, forAddedList, handleRoleChange }: UserTagData) => {
+  // const [userRole, setRole] = useState<'editor' | 'viewer'>(role === 'owner' ? 'editor' : role);
   return (
     <div className='w-full flex pr-2'>
       <div className='w-[40px] h-[40px] mr-3'>
@@ -424,8 +504,90 @@ const UserTag = ({ name, role, email }: UserTagData) => {
 
         <p className='text-[#757575]'>{email}</p>
       </div>
-      <div className='text-[#757575] italic flex items-center'>{role}</div>
+      {forAddedList === true && role !== 'owner' ? (
+        <RoleDropdownMenu role={role} setRole={handleRoleChange!} email={email} />
+      ) : (
+        <div className='text-[#757575] italic flex items-center'>
+          {role === 'owner' ? 'Doc owner' : ''}
+        </div>
+      )}
     </div>
+  );
+};
+
+const RoleDropdownMenu = ({
+  role,
+  setRole,
+  email,
+  forAddNew = false,
+  setRoleForAdded,
+}: {
+  email?: string;
+  role: 'editor' | 'viewer' | 'Remove';
+  setRole?: (email: string, value: 'editor' | 'viewer' | 'Remove') => void;
+  setRoleForAdded?: (value: 'editor' | 'viewer') => void;
+  forAddNew?: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            'text-xs text-[#1E1E1E] p-1 font-semibold rounded-md',
+            isOpen ? 'border-[#FFCF33] border-[1px]' : 'border-[1px] border-transparent'
+          )}
+        >
+          {role === 'editor' ? 'Can edit' : role === 'viewer' ? 'Can view' : 'Remove'}
+          <Image
+            src='/icons/dropdown-trigger.svg'
+            alt='chevron down'
+            width={16}
+            height={16}
+            className='inline-block ml-1'
+          />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className='w-[185px] rounded-lg bg-white shadow-lg border-[#D9D9D9] border-[1px]'
+        side='top'
+        align='start'
+        sideOffset={10}
+      >
+        <DropdownMenuRadioGroup
+          value={role}
+          onValueChange={(value) => {
+            if (forAddNew) {
+              setRoleForAdded?.(value as 'editor' | 'viewer');
+            } else {
+              setRole?.(email!, value as 'editor' | 'viewer' | 'Remove');
+            }
+          }}
+          className='text-[#1E1E1E] w-[185px] p-2'
+        >
+          <DropdownMenuRadioItem
+            value='editor'
+            className={cn('w-full py-3 px-4 rounded-md', role === 'editor' && 'bg-[#D9D9D9]')}
+          >
+            Can edit
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem
+            value='viewer'
+            className={cn('w-full py-3 px-4 rounded-md', role === 'viewer' && 'bg-[#D9D9D9]')}
+          >
+            Can view
+          </DropdownMenuRadioItem>
+          {!forAddNew && (
+            <DropdownMenuRadioItem
+              value='Remove'
+              className={cn('w-full py-3 px-4 rounded-md', role === 'Remove' && 'bg-[#D9D9D9]')}
+            >
+              Remove
+            </DropdownMenuRadioItem>
+          )}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 
