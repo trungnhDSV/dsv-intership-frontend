@@ -5,6 +5,7 @@ import { COLOR_OPTIONS, FONT_FAMILY_OPTIONS, FONT_SIZE_OPTIONS } from '@/constan
 import { isSameColor, rgbToString } from '@/lib/annotations/annotationStyle';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import React from 'react';
 
@@ -46,6 +47,7 @@ const TextAnnotControl = ({
   handleDeleteAnnotation,
 }: TextAnnotControlProps) => {
   console.log('TextAnnotControl rendered', forSpecificAnnot);
+  const t = useTranslations('annotControl');
   return (
     <Popover defaultOpen={forSpecificAnnot}>
       <PopoverTrigger>
@@ -58,7 +60,7 @@ const TextAnnotControl = ({
         <div>
           <div className='flex flex-col gap-4'>
             <div className='flex flex-col gap-2 px-4'>
-              <p className='text-sm'>Text style</p>
+              <p className='text-sm'>{t('textHeader')}</p>
               <div className='flex gap-2'>
                 <div className='flex-1 h-[36px] rounded-md border border-[#D9D9D9] bg-white justify-center overflow-hidden'>
                   <Popover>
@@ -75,7 +77,7 @@ const TextAnnotControl = ({
                     </PopoverTrigger>
                     <PopoverContent
                       align='end'
-                      className='z-100 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
+                      className=' z-100000001 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
                       key={'fontFamily'}
                       side='bottom'
                       sideOffset={4}
@@ -105,7 +107,7 @@ const TextAnnotControl = ({
                     </PopoverTrigger>
                     <PopoverContent
                       key={'fontsize'}
-                      className='z-100 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
+                      className=' z-100000001 my-1 p-2 rounded-xl bg-white shadow-lg border-[1px] border-[#D9D9D9] w-[var(--radix-dropdown-menu-trigger-width)] min-w-full'
                     >
                       {FONT_SIZE_OPTIONS.map((option) => (
                         <div
@@ -144,7 +146,7 @@ const TextAnnotControl = ({
             </div>
             <div className={cn('flex flex-col gap-4 px-4', !forSpecificAnnot && 'pb-4')}>
               <div className='flex flex-col gap-2'>
-                <p className='text-sm'>Frame style</p>
+                <p className='text-sm'>{t('frameStyle')}</p>
                 {/* radio group */}
                 <div className='w-full flex bg-white rounded-full'>
                   <button
@@ -154,7 +156,7 @@ const TextAnnotControl = ({
                     )}
                     onClick={() => setTextRadioGroup('fill')}
                   >
-                    Fill
+                    {t('fill')}
                   </button>
                   <button
                     className={cn(
@@ -163,7 +165,7 @@ const TextAnnotControl = ({
                     )}
                     onClick={() => setTextRadioGroup('borderLine')}
                   >
-                    Border Line
+                    {t('borderLine')}
                   </button>
                 </div>
 
@@ -275,7 +277,7 @@ const TextAnnotControl = ({
                 )}
               </div>
               <div className='flex flex-col gap-2'>
-                <p className='text-sm'>Opacity</p>
+                <p className='text-sm'>{t('opacity')}</p>
                 <div className='flex items-center gap-4'>
                   <Slider
                     value={[Math.round(textState.opacity * 100)]}
@@ -333,7 +335,7 @@ const TextAnnotControl = ({
                   className='flex items-center gap-2 px-4 bg-white w-full'
                 >
                   <Image src='/icons/md_trash-bin.svg' alt='delete' width={16} height={16} />
-                  <p className='text-[#900B09] py-[12px]'>Delete</p>
+                  <p className='text-[#900B09] py-[12px]'>{t('delete')}</p>
                 </button>
               </div>
             )}

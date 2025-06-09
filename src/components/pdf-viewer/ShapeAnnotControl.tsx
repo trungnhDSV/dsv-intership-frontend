@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 import { ChevronDown } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import React from 'react';
 
@@ -44,6 +45,7 @@ const ShapeAnnotControl = ({
   forSpecificAnnot = false,
   handleDeleteAnnotation,
 }: ShapeAnnotControlProps) => {
+  const t = useTranslations('annotControl');
   return (
     <DropdownMenu defaultOpen={forSpecificAnnot}>
       <DropdownMenuTrigger>
@@ -57,7 +59,7 @@ const ShapeAnnotControl = ({
           <div className='flex flex-col gap-4 px-4 pb-4'>
             {!forSpecificAnnot && (
               <div className='flex flex-col gap-2'>
-                <p className='text-sm'>Shape</p>
+                <p className='text-sm'>{t('shapeHeader')}</p>
                 <div className='flex gap-1'>
                   <button
                     className={cn(
@@ -139,7 +141,7 @@ const ShapeAnnotControl = ({
             )}
             <div className='flex flex-col gap-4'>
               <div className='flex flex-col gap-2'>
-                <p className='text-sm'>Frame style</p>
+                <p className='text-sm'>{t('frameStyle')}</p>
                 {/* radio group */}
                 <div className='w-full flex bg-white rounded-full'>
                   <button
@@ -149,7 +151,7 @@ const ShapeAnnotControl = ({
                     )}
                     onClick={() => setShapeRadioGroup('fill')}
                   >
-                    Fill
+                    {t('fill')}
                   </button>
                   <button
                     className={cn(
@@ -158,7 +160,7 @@ const ShapeAnnotControl = ({
                     )}
                     onClick={() => setShapeRadioGroup('borderLine')}
                   >
-                    Border Line
+                    {t('borderLine')}
                   </button>
                 </div>
 
@@ -278,7 +280,7 @@ const ShapeAnnotControl = ({
                 )}
               </div>
               <div className='flex flex-col gap-2'>
-                <p className='text-sm'>Opacity</p>
+                <p className='text-sm'>{t('opacity')}</p>
                 <div className='flex items-center gap-4'>
                   <Slider
                     value={[Math.round(shapeState.opacity * 100)]}
@@ -337,7 +339,7 @@ const ShapeAnnotControl = ({
                 className='flex items-center gap-2 px-4 bg-white w-full'
               >
                 <Image src='/icons/md_trash-bin.svg' alt='delete' width={16} height={16} />
-                <p className='text-[#900B09] py-[12px]'>Delete</p>
+                <p className='text-[#900B09] py-[12px]'>{t('delete')}</p>
               </button>
             </div>
           )}

@@ -1,3 +1,5 @@
+'use client';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import React from 'react';
 
@@ -6,6 +8,7 @@ const Layout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+  const t = useTranslations('home');
   return (
     <div className='relative flex items-center justify-between min-h-screen px-12'>
       <Image
@@ -21,8 +24,10 @@ const Layout = ({
           DI-PDF
         </div>
         <div className='flex flex-col gap-0'>
-          <p className='text-sm font-light text-white'>A world where document collaboration is </p>
-          <span className='text-sm font-bold text-white'>fast, fun and easy</span>
+          <p className='text-sm font-light text-white'>
+            {t('sloganHeader')} <br />
+            <span className='text-sm font-bold text-white'>{t('sloganTail')}</span>
+          </p>
         </div>
       </div>
       <div className='mr-20'>{children}</div>

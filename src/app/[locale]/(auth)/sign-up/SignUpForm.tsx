@@ -141,7 +141,9 @@ const SignUpForm = () => {
                 className={state?.errors?.confirmPassword ? 'border-red-800' : ''}
               />
               {state?.errors?.confirmPassword && (
-                <p className='text-sm text-[#900B09] mt-1'>{state.errors.confirmPassword[0]}</p>
+                <p className='text-sm text-[#900B09] mt-1'>
+                  {handleTranslationError(t, state.errors.confirmPassword[0])}
+                </p>
               )}
             </div>
             <div>

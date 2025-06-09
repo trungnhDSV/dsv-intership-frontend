@@ -10,27 +10,27 @@
     "passwordPlaceholder": "Nhập mật khẩu",
     "mandatoryField": "Trường bắt buộc",
     "invalidSignIn": "Email hoặc mật khẩu không hợp lệ",
-    "accountExists": "Email này đang được sử dụng với tài khoản email & mật khẩu. Vui lòng đăng nhập bằng email & mật khẩu",
+    "accountExists": "Email này đã được sử dụng với phương thức đăng nhập bằng email và mật khẩu. Vui lòng đăng nhập bằng email và mật khẩu",
     "invalidEmail": "Địa chỉ email không hợp lệ",
     "invalidPassword": "Mật khẩu phải có ít nhất 8 ký tự",
     "invalidEmailOnly": "Email không hợp lệ",
-    "incorrectAuth": "Email hoặc mật khẩu không chính xác",
-    "dontHaveAccount": "Chưa có tài khoản? ",
-    "alreadyHaveAccount": "Đã có tài khoản? ",
+    "incorrectAuth": "Email hoặc mật khẩu không đúng",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "alreadyHaveAccount": "Đã có tài khoản?",
     "signInButton": "Đăng nhập",
     "signUpButton": "Đăng ký",
     "fullNameLabel": "Họ và tên <tag>*</tag>",
     "fullNamePlaceholder": "Nhập họ và tên",
     "rePasswordLabel": "Xác nhận lại mật khẩu <tag>*</tag>",
-    "rePasswordPlaceholder": "Nhập lại mật khẩu",
-    "accept": "Tôi chấp nhận tất cả <tag>Điều khoản Dịch vụ</tag> và <tag>Chính sách Bảo mật</tag>",
+    "rePasswordPlaceholder": "Xác nhận lại mật khẩu",
+    "accept": "Tôi đồng ý với tất cả <tag>Điều khoản Dịch vụ</tag> và <tag>Chính sách Bảo mật</tag>",
     "mustAccept": "Bạn phải chấp nhận các điều khoản",
-    "mustSamePass": "Mật khẩu phải giống nhau",
+    "mustSamePass": "Mật khẩu phải trùng khớp",
     "mustPassLength": "Mật khẩu phải có ít nhất 8 ký tự"
   },
   "verify": {
     "verifyTitle": "Xác minh địa chỉ email của bạn",
-    "verifyDescription": "Chúng tôi vừa gửi email xác minh tới {email}. Vui lòng kiểm tra hộp thư đến",
+    "verifyDescription": "Chúng tôi vừa gửi một email xác minh đến {email}. Vui lòng kiểm tra hộp thư đến",
     "resend": "Gửi lại liên kết xác minh",
     "notReceive": "Không nhận được email?",
     "wellDone": "Hoàn thành!!",
@@ -40,23 +40,24 @@
   "documents": {
     "myDocuments": "Tài liệu của tôi",
     "total": "Tổng cộng",
-    "fileName": "Tên tệp",
-    "owner": "Chủ sở hữu",
+    "fileName": "Tên tập tin",
+    "owner": "Chủ sở hữu tài liệu",
     "lastUpdated": "Cập nhật lần cuối",
     "noDocuments": "Không tìm thấy tài liệu nào",
     "loading": "Đang tải thêm tài liệu...",
     "you": "Bạn",
-    "uploadDocument": "Tải tài liệu lên",
-    "uploadWithFile": "Tải lên bằng tệp",
+    "uploadDocument": "Tải lên tài liệu",
+    "uploadWithFile": "Tải lên từ tập tin",
     "uploadWithGoogleDrive": "Tải lên từ Google Drive",
     "uploading": "Đang tải lên..."
   },
   "home": {
-    "projectName": "DI-PDF",
-    "slogan": "Một thế giới nơi cộng tác tài liệu trở nên nhanh chóng, thú vị và dễ dàng"
+    "sloganHeader": "Một thế giới nơi cộng tác tài liệu trở nên",
+    "sloganTail": "nhanh chóng, thú vị và dễ dàng"
   },
   "notFoundDoc": {
-    "tittle": "Bạn không có quyền truy cập tệp này",
+    "tittle": "Bạn không có quyền truy cập tập tin này",
+    "title404": "Tài liệu này không tồn tại",
     "desc": "Bạn đang đăng nhập với tư cách",
     "backToHome": "Quay lại tài liệu của tôi"
   },
@@ -73,10 +74,31 @@
     "logout": "Đăng xuất"
   },
   "toast": {
-    "uploadError": "Không thể tải tệp này lên",
-    "uploadErrorSizeDesc": "Vui lòng đảm bảo tệp tải lên không vượt quá 20MB và có định dạng .pdf",
-    "uploadErrorPasswordDesc": "Vui lòng đảm bảo tệp tải lên không yêu cầu mật khẩu",
+    "uploadError": "Không thể tải tập tin này lên",
+    "uploadErrorSizeDesc": "Vui lòng đảm bảo tập tin không vượt quá 20MB và có định dạng .pdf",
+    "uploadErrorPasswordDesc": "Vui lòng đảm bảo tập tin không yêu cầu mật khẩu",
     "uploadSuccess": "Tải lên thành công",
     "uploadErrorServer": "Tải lên thất bại. Vui lòng thử lại sau"
+  },
+  "shareDialog": {
+    "editRole": "Có thể chỉnh sửa",
+    "viewRole": "Chỉ xem",
+    "removeRole": "Gỡ bỏ",
+    "unregistedUser": "Người dùng chưa đăng ký",
+    "ownerRole": "Chủ tài liệu",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "add": "Thêm",
+    "invitedTitle": "Người được mời",
+    "shareDoc": "Chia sẻ \"{name}\""
+  },
+  "annotControl": {
+    "shapeHeader": "Hình dạng",
+    "frameStyle": "Kiểu khung",
+    "opacity": "Độ mờ",
+    "textHeader": "Kiểu văn bản",
+    "delete": "Xóa",
+    "fill": "Tô màu",
+    "borderLine": "Đường viền"
   }
 }

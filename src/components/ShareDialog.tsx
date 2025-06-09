@@ -1,5 +1,3 @@
-// shareDialog
-
 'use client';
 import { showSuccessToast } from '@/components/CustomToast';
 import { Button } from '@/components/ui/button';
@@ -16,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 import { X } from 'lucide-react';
-import { init } from 'next/dist/compiled/webpack/webpack';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -109,7 +107,8 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
   const [isDraftListEmpty, setIsDraftListEmpty] = useState(true);
   const [role, setRole] = useState<'editor' | 'viewer'>('viewer');
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const [addListChanged, setAddListChanged] = useState(false);
+
+  const t = useTranslations('shareDialog');
 
   const handleInputChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -141,7 +140,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
     setAddedList((prev) =>
       prev.map((user) => (user.email === email ? { ...user, role: newRole } : user))
     );
-    setAddListChanged(true);
   };
 
   useEffect(() => {
@@ -242,7 +240,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
     }
     // successfully added all users
     console.log('Successfully added users to document:', docId);
-    setAddListChanged(false);
     showSuccessToast({
       title: 'Permissions updated successfully',
     });
@@ -326,7 +323,8 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
         {/* Header cố định */}
         <div className='px-8 flex flex-col gap-4 h-fit'>
           <DialogTitle className='text-2xl font-semibold'>
-            Share &quot;{docData?.name}&quot;
+            {/* Share &quot;{docData?.name}&quot; */}
+            {t('shareDoc', { name: docData!.name })}
           </DialogTitle>
           <div>
             <Input
@@ -365,6 +363,7 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
                 name={foundUser.name}
                 role={foundUser.role}
                 id={foundUser.id}
+                forFoundedUser={true}
               />
             </div>
           ) : draftList.length > 0 ? (
@@ -401,8 +400,8 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
           )}
         >
           {!isDraftListEmpty && (
-            <div className='text-xs text-[#1E1E1E]'>
-              <span className='mr-[6px]'>People invited</span>
+            <div className='text-xs text-[#1E1E1E] flex items-center'>
+              <span className='mr-[6px]'>{t('invitedTitle')}</span>
               <RoleDropdownMenu role={role} setRoleForAdded={setRole} forAddNew={true} />
             </div>
           )}
@@ -421,15 +420,25 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
                 setIsDraftListEmpty(true);
               }}
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               className='bg-[#2C2C2C] px-[13.5px] py-3 text-[#F5F5F5]'
-              disabled={draftList.length === 0 && !addListChanged}
+              disabled={
+                draftList.length === 0 &&
+                addedList.length === initAddedList.current.length &&
+                addedList.every(
+                  (u, i) =>
+                    u.email === initAddedList.current[i]?.email &&
+                    u.role === initAddedList.current[i]?.role
+                )
+              }
               onClick={() => {
                 if (draftList.length === 0)
                   handleSaveForAddedList(docData?.id, addedList, accessToken);
-                else handleSaveForDraftList(docData?.id, draftList, addedList, accessToken);
+                else {
+                  handleSaveForDraftList(docData?.id, draftList, addedList, accessToken);
+                }
                 setDraftList([]);
                 setIsAdding(false);
                 setFoundUser(null);
@@ -438,7 +447,7 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
                 handleClose();
               }}
             >
-              Add
+              {draftList.length === 0 ? t('save') : t('add')}
             </Button>
           </div>
         </div>
@@ -475,12 +484,26 @@ interface UserTagData {
   id: string;
   forAddedList?: boolean;
   handleRoleChange?: (email: string, newRole: 'editor' | 'viewer' | 'Remove') => void;
+  forFoundedUser?: boolean;
 }
 
-const UserTag = ({ name, role, email, forAddedList, handleRoleChange }: UserTagData) => {
-  // const [userRole, setRole] = useState<'editor' | 'viewer'>(role === 'owner' ? 'editor' : role);
+const UserTag = ({
+  name,
+  role,
+  email,
+  forAddedList,
+  handleRoleChange,
+  forFoundedUser,
+}: UserTagData) => {
+  const t = useTranslations('shareDialog');
+  const tDoc = useTranslations('documents');
   return (
-    <div className='w-full flex pr-2'>
+    <div
+      className={cn(
+        'w-full flex pr-2',
+        forFoundedUser && 'border-[1px] border-[#D9D9D9] rounded-lg p-3 shadow-md'
+      )}
+    >
       <div className='w-[40px] h-[40px] mr-3'>
         <Avatar
           className={cn(
@@ -496,19 +519,21 @@ const UserTag = ({ name, role, email, forAddedList, handleRoleChange }: UserTagD
       <div className='flex-1'>
         {name !== 'Unregistered User' ? (
           <p className='font-semibold'>
-            {name} {role === 'owner' && '(You)'}
+            {name} {role === 'owner' && `(${tDoc('you')})`}
           </p>
         ) : (
-          <p className='font-semibold text-[#900B09]'>Unregistered User</p>
+          <p className='font-semibold text-[#900B09]'>{t('unregistedUser')}</p>
         )}
 
         <p className='text-[#757575]'>{email}</p>
       </div>
       {forAddedList === true && role !== 'owner' ? (
-        <RoleDropdownMenu role={role} setRole={handleRoleChange!} email={email} />
+        <div className='flex items-center'>
+          <RoleDropdownMenu role={role} setRole={handleRoleChange!} email={email} />
+        </div>
       ) : (
         <div className='text-[#757575] italic flex items-center'>
-          {role === 'owner' ? 'Doc owner' : ''}
+          {role === 'owner' ? t('ownerRole') : ''}
         </div>
       )}
     </div>
@@ -529,16 +554,19 @@ const RoleDropdownMenu = ({
   forAddNew?: boolean;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const t = useTranslations('shareDialog');
   return (
     <DropdownMenu onOpenChange={(open) => setIsOpen(open)}>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'text-xs text-[#1E1E1E] p-1 font-semibold rounded-md',
-            isOpen ? 'border-[#FFCF33] border-[1px]' : 'border-[1px] border-transparent'
+            'text-xs text-[#1E1E1E] p-1 font-semibold rounded-md h-fit',
+            isOpen
+              ? 'border-[#FFCF33] border-[1px] bg-[#F5F5F5]'
+              : 'border-[1px] border-transparent'
           )}
         >
-          {role === 'editor' ? 'Can edit' : role === 'viewer' ? 'Can view' : 'Remove'}
+          {role === 'editor' ? t('editRole') : role === 'viewer' ? t('viewRole') : t('removeRole')}
           <Image
             src='/icons/dropdown-trigger.svg'
             alt='chevron down'
@@ -569,20 +597,20 @@ const RoleDropdownMenu = ({
             value='editor'
             className={cn('w-full py-3 px-4 rounded-md', role === 'editor' && 'bg-[#D9D9D9]')}
           >
-            Can edit
+            {t('editRole')}
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem
             value='viewer'
             className={cn('w-full py-3 px-4 rounded-md', role === 'viewer' && 'bg-[#D9D9D9]')}
           >
-            Can view
+            {t('viewRole')}
           </DropdownMenuRadioItem>
           {!forAddNew && (
             <DropdownMenuRadioItem
               value='Remove'
               className={cn('w-full py-3 px-4 rounded-md', role === 'Remove' && 'bg-[#D9D9D9]')}
             >
-              Remove
+              {t('removeRole')}
             </DropdownMenuRadioItem>
           )}
         </DropdownMenuRadioGroup>

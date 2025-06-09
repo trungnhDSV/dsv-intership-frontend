@@ -215,7 +215,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
               if (annotations.length === 1) {
                 const annotation = annotations[0];
                 const ShapeAnnotControlHeight = 350;
-                const TextAnnotControlHeight = 450;
+                const TextAnnotControlHeight = 520;
                 const annotRect = annotation.getRect();
 
                 if (!annotRect) {
@@ -254,20 +254,25 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
 
                 // Khởi tạo giá trị mặc định (position dưới)
                 let finalX = bottomWindowPoint.x - scrollLeft - viewportPadding;
-                let finalY = isFreeText
-                  ? bottomY - scrollTop * zoom + 5
-                  : bottomY - scrollTop * zoom - 20;
+                let finalY = isFreeText ? bottomY - scrollTop : bottomY - scrollTop - 20;
                 let positionType = 'below';
 
                 // Tính toán không gian hiển thị
-                const spaceBelow = windowHeight - bottomY + scrollTop * zoom - viewportPadding;
-                const spaceAbove = topY - scrollTop * zoom - viewportPadding;
-                const spaceRight =
-                  windowWidth - bottomWindowPoint.x + scrollLeft * zoom - viewportPadding;
+                const spaceBelow = windowHeight - finalY;
+                const spaceAbove = topY - scrollTop - viewportPadding;
+                const spaceRight = windowWidth - bottomWindowPoint.x + scrollLeft - viewportPadding;
                 const spaceLeft = bottomWindowPoint.x - scrollLeft - viewportPadding;
 
                 // Logic xác định vị trí (không dùng return)
                 if (spaceBelow >= popupHeight) {
+                  console.log(
+                    'Window height:',
+                    windowHeight,
+                    'Popup height:',
+                    popupHeight,
+                    spaceBelow,
+                    finalY
+                  );
                   // Giữ giá trị mặc định (below)
                   positionType = 'below';
                   console.log(
@@ -280,7 +285,7 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                   );
                 } else if (spaceAbove >= popupHeight) {
                   // Hiển thị bên trên
-                  finalY = isFreeText ? topY - scrollTop * zoom - 30 : topY - scrollTop * zoom - 20;
+                  finalY = isFreeText ? topY - scrollTop - 30 : topY - scrollTop - 20;
                   positionType = 'above';
                   console.log(
                     'Popup position:',
@@ -292,8 +297,8 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                   );
                 } else if (spaceRight >= popupWidth) {
                   // Hiển thị bên phải
-                  finalX = bottomWindowPoint.x + popupWidth - scrollLeft * zoom + viewportPadding;
-                  finalY = topY - scrollTop * zoom;
+                  finalX = bottomWindowPoint.x + popupWidth - scrollLeft - 5;
+                  finalY = topY - scrollTop;
                   positionType = 'right';
                   console.log(
                     'Popup position:',
@@ -305,8 +310,8 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
                   );
                 } else if (spaceLeft >= popupWidth) {
                   // Hiển thị bên trái
-                  finalX = bottomWindowPoint.x - scrollLeft * zoom - popupWidth - viewportPadding;
-                  finalY = topY - scrollTop * zoom;
+                  finalX = topWindowPoint.x - scrollLeft - 5;
+                  finalY = topY - scrollTop;
                   positionType = 'left';
                   console.log(
                     'Popup position:',

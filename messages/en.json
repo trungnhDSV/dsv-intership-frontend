@@ -53,8 +53,8 @@
     "uploading": "Uploading..."
   },
   "home": {
-    "projectName": "DI-PDF",
-    "slogan": "A world where document collaboration is fast, fun and easy"
+    "sloganHeader": "A world where document collaboration is",
+    "sloganTail": "fast, fun, and easy"
   },
   "notFoundDoc": {
     "tittle": "You don't have permission to access this file",
@@ -80,5 +80,26 @@
     "uploadErrorPasswordDesc": "Please ensure the upload file does not require password",
     "uploadSuccess": "Uploaded successfully",
     "uploadErrorServer": "'Uploaded Failed. Please try again later"
+  },
+  "shareDialog": {
+    "editRole": "Can edit",
+    "viewRole": "Can view",
+    "removeRole": "Remove",
+    "unregistedUser": "Unregistered User",
+    "ownerRole": "Doc owner",
+    "cancel": "Cancel",
+    "save": "Save",
+    "add": "Add",
+    "invitedTitle": "People invited",
+    "shareDoc": "Share \"{name}\""
+  },
+  "annotControl": {
+    "shapeHeader": "Shape",
+    "frameStyle": "Frame style",
+    "opacity": "Opacity",
+    "textHeader": "Text style",
+    "delete": "Delete",
+    "fill": "Fill",
+    "borderLine": "Border line"
   }
 }
