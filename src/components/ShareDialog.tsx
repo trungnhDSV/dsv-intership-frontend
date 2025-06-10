@@ -35,7 +35,6 @@ const fetchAddedUsers = async (docId: string, accessToken: string): Promise<User
       throw new Error('Failed to fetch added users');
     }
     const data = await response.json();
-    console.log('Fetched added users:', data.data);
 
     return data.data.map(
       (user: { email: string; fullName: string; role: 'owner' | 'edit' | 'view'; id: string }) => ({
@@ -69,7 +68,6 @@ const fetchUserByEmail = async (
       throw new Error('Failed to fetch user by email');
     }
     const data = await response.json();
-    console.log('Fetched user by email:', data);
     if (!data.data)
       return {
         email,
@@ -147,7 +145,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
       if (!docData?.id || !accessToken) return;
       try {
         const users = await fetchAddedUsers(docData.id, accessToken);
-        console.log('Initial added users:', users);
         setAddedList(users);
         initAddedList.current = users;
       } catch (error) {
@@ -239,7 +236,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
       }
     }
     // successfully added all users
-    console.log('Successfully added users to document:', docId);
     showSuccessToast({
       title: 'Permissions updated successfully',
     });
@@ -252,10 +248,8 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
     accessToken: string | null | undefined
   ) => {
     if (!accessToken || !docId) return;
-    console.log('ADDED LIST:', addedList);
     for (const user of draftList) {
       if (addedList.some((u) => u.email === user.email)) {
-        console.log('User already exists in added list:', user.email);
         // check role
         const existingUser = addedList.find((u) => u.email === user.email);
         if (existingUser) {
@@ -289,7 +283,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
         }
       } else
         try {
-          console.log('Adding user to document:', user.email);
           const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents/${docId}/members`, {
             method: 'POST',
             headers: {
@@ -311,7 +304,6 @@ const ShareDialog = ({ docData, isOpen, accessToken, handleClose }: ShareDialogP
         }
     }
     // successfully added all users
-    console.log('Successfully added users to document:', docId);
     showSuccessToast({
       title: 'Permissions updated successfully',
     });

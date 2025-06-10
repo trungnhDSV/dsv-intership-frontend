@@ -37,13 +37,7 @@ const DocPage = () => {
         }
         const docData = await s3KeyRes.json();
         setDoc(docData.data);
-        console.log('Document data:', docData.data);
         setRole(() => {
-          console.log(
-            docData.data.ownerId.id,
-            session.user?.id,
-            docData.data.ownerId.id === session.user?.id
-          );
           if (docData.data.ownerId.id === session.user?.id) {
             return 'owner';
           } else {

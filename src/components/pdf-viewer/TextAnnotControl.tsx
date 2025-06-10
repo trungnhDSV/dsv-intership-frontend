@@ -46,7 +46,6 @@ const TextAnnotControl = ({
   forSpecificAnnot = false,
   handleDeleteAnnotation,
 }: TextAnnotControlProps) => {
-  console.log('TextAnnotControl rendered', forSpecificAnnot);
   const t = useTranslations('annotControl');
   return (
     <Popover defaultOpen={forSpecificAnnot}>

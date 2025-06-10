@@ -59,7 +59,6 @@ export default function VerifyPage() {
   }
 
   const handleNavigate = () => {
-    console.log('Navigate to documents');
     router.push('/documents');
   };
 

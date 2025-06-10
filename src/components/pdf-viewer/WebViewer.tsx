@@ -249,7 +249,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
 
                 const topY = topWindowPoint.y;
                 const bottomY = bottomWindowPoint.y;
-                console.log('Top Y:', topY, 'Bottom Y:', bottomY);
                 // Default show below annotation
 
                 // Khởi tạo giá trị mặc định (position dưới)
@@ -265,62 +264,22 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
 
                 // Logic xác định vị trí (không dùng return)
                 if (spaceBelow >= popupHeight) {
-                  console.log(
-                    'Window height:',
-                    windowHeight,
-                    'Popup height:',
-                    popupHeight,
-                    spaceBelow,
-                    finalY
-                  );
                   // Giữ giá trị mặc định (below)
                   positionType = 'below';
-                  console.log(
-                    'Popup position:',
-                    positionType,
-                    'spaceBelow:',
-                    spaceBelow,
-                    'popupHeight:',
-                    popupHeight
-                  );
                 } else if (spaceAbove >= popupHeight) {
                   // Hiển thị bên trên
                   finalY = isFreeText ? topY - scrollTop - 30 : topY - scrollTop - 20;
                   positionType = 'above';
-                  console.log(
-                    'Popup position:',
-                    positionType,
-                    'spaceAbove:',
-                    spaceAbove,
-                    'popupHeight:',
-                    popupHeight
-                  );
                 } else if (spaceRight >= popupWidth) {
                   // Hiển thị bên phải
                   finalX = bottomWindowPoint.x + popupWidth - scrollLeft - 5;
                   finalY = topY - scrollTop;
                   positionType = 'right';
-                  console.log(
-                    'Popup position:',
-                    positionType,
-                    'spaceRight:',
-                    spaceRight,
-                    'popupWidth:',
-                    popupWidth
-                  );
                 } else if (spaceLeft >= popupWidth) {
                   // Hiển thị bên trái
                   finalX = topWindowPoint.x - scrollLeft - 5;
                   finalY = topY - scrollTop;
                   positionType = 'left';
-                  console.log(
-                    'Popup position:',
-                    positionType,
-                    'spaceLeft:',
-                    spaceLeft,
-                    'popupWidth:',
-                    popupWidth
-                  );
                 }
 
                 setPopupData({
@@ -371,8 +330,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
         documentViewer.addEventListener('loadError', (error) => {
           console.error('PDF load error:', error);
         });
-
-        console.log('WebViewer initialized with document:', docData, initialDoc, accessToken);
       } catch (error) {
         console.error('Error initializing WebViewer:', error);
       }
@@ -386,7 +343,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
     if (instanceRef.current && isViewerReady) {
       if (selectedAnnotation === 'shape') {
         const { documentViewer, Annotations } = instanceRef.current.Core;
-        console.log('Setting shape tool styles:', shapeState);
         const toolName = getToolNameFromShapeType(shapeState.shapeType);
 
         documentViewer.getTool(toolName).setStyles({
@@ -406,7 +362,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
         });
 
         instanceRef.current.UI.setToolMode(toolName);
-        console.log(instanceRef.current.Core.documentViewer.getToolMode());
         // Core.annotationDefaults
       } else if (selectedAnnotation === 'text') {
         const { documentViewer, Annotations } = instanceRef.current.Core;
@@ -535,7 +490,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
           console.error('Failed to save annotations:', res.statusText);
           return;
         }
-        console.log('Annotations saved successfully');
       }, 2000); // chỉ gọi API nếu 2s không có thao tác mới
     };
 
@@ -559,7 +513,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
   };
   const handleDownload = async () => {
     if (!instanceRef.current) return;
-    console.log('Downloading PDF with annotations...');
     const { documentViewer } = instanceRef.current.Core;
 
     // Đảm bảo document đã load
@@ -601,12 +554,6 @@ export default function WebViewer({ initialDoc, docData, accessToken, role }: We
       setSelectedSpecificAnnot(null);
     }
   };
-
-  console.log(
-    'is selectedSpecificAnnot free text?',
-    popupData.visible,
-    selectedSpecificAnnot?.Subject === 'Free Text'
-  );
 
   return (
     <>

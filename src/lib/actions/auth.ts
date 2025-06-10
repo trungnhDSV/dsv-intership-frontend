@@ -76,7 +76,6 @@ export async function signUpAction(
     };
   }
   try {
-    console.log('Sign up values:', values);
     const signupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

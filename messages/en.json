@@ -101,5 +101,15 @@
     "delete": "Delete",
     "fill": "Fill",
     "borderLine": "Border line"
+  },
+  "authDialog": {
+    "title": "Google Drive Authorization Required",
+    "preDescription": "was uploaded using Google Drive account:",
+    "description": "Please authorize that account to access this file.",
+    "detail": "You're sign in as ",
+    "signInButton": "Sign in",
+    "cancelButton": "Cancel",
+    "authButton": "Authorize Google Drive",
+    "re-authButton": "Re-authorize Google Drive"
   }
 }

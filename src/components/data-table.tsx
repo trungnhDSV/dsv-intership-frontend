@@ -24,6 +24,14 @@ interface DataTableProps<TData, TValue> {
     onSuccess?: (newAccId: string) => void;
   }) => void;
   setAuthDialogOpen: (open: boolean) => void;
+  currUser:
+    | {
+        id: string;
+        email: string;
+        name: string;
+      }
+    | null
+    | undefined;
 }
 
 export function DataTable<TData, TValue>({
@@ -31,6 +39,7 @@ export function DataTable<TData, TValue>({
   data,
   setAuthDialogData,
   setAuthDialogOpen,
+  currUser,
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -78,7 +87,8 @@ export function DataTable<TData, TValue>({
                     onClick={() => {
                       // @ts-expect-error: row.original type may not match FileMetadata due to generic typing
                       const data: FileMetadata = row.original;
-                      if (data.googleDrive) {
+                      if (data.googleDrive && data.ownerId === currUser?.id) {
+                        // only require authorization if the file is from Google Drive and the uploader is owner
                         const currAccountData = JSON.parse(
                           localStorage.getItem('googleDriveProfile') || '{}'
                         );
@@ -89,7 +99,6 @@ export function DataTable<TData, TValue>({
                             uploaderEmail: data.googleDrive.email,
                             onSuccess: (newAccId) => {
                               if (data.googleDrive?.accountId === newAccId) {
-                                console.log('Authorized with Google Drive');
                                 router.push(`/documents/${data.id}`);
                               }
                             },

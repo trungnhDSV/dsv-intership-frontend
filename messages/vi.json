@@ -10,44 +10,45 @@
     "passwordPlaceholder": "Nhập mật khẩu",
     "mandatoryField": "Trường bắt buộc",
     "invalidSignIn": "Email hoặc mật khẩu không hợp lệ",
-    "accountExists": "Email này đã được sử dụng với phương thức đăng nhập bằng email và mật khẩu. Vui lòng đăng nhập bằng email và mật khẩu",
+    "accountExists": "Địa chỉ email này đang được sử dụng với email & mật khẩu. Vui lòng đăng nhập bằng email & mật khẩu",
     "invalidEmail": "Địa chỉ email không hợp lệ",
     "invalidPassword": "Mật khẩu phải có ít nhất 8 ký tự",
     "invalidEmailOnly": "Email không hợp lệ",
-    "incorrectAuth": "Email hoặc mật khẩu không đúng",
-    "dontHaveAccount": "Chưa có tài khoản?",
-    "alreadyHaveAccount": "Đã có tài khoản?",
+    "incorrectAuth": "Email hoặc mật khẩu không chính xác",
+    "dontHaveAccount": "Chưa có tài khoản? ",
+    "alreadyHaveAccount": "Đã có tài khoản? ",
     "signInButton": "Đăng nhập",
+
     "signUpButton": "Đăng ký",
     "fullNameLabel": "Họ và tên <tag>*</tag>",
     "fullNamePlaceholder": "Nhập họ và tên",
     "rePasswordLabel": "Xác nhận lại mật khẩu <tag>*</tag>",
     "rePasswordPlaceholder": "Xác nhận lại mật khẩu",
-    "accept": "Tôi đồng ý với tất cả <tag>Điều khoản Dịch vụ</tag> và <tag>Chính sách Bảo mật</tag>",
-    "mustAccept": "Bạn phải chấp nhận các điều khoản",
-    "mustSamePass": "Mật khẩu phải trùng khớp",
+    "accept": "Tôi đồng ý với tất cả <tag>Điều khoản dịch vụ</tag> và <tag>Chính sách bảo mật</tag>",
+    "mustAccept": "Bạn phải đồng ý với các điều khoản",
+    "mustSamePass": "Mật khẩu phải giống nhau",
     "mustPassLength": "Mật khẩu phải có ít nhất 8 ký tự"
   },
   "verify": {
     "verifyTitle": "Xác minh địa chỉ email của bạn",
-    "verifyDescription": "Chúng tôi vừa gửi một email xác minh đến {email}. Vui lòng kiểm tra hộp thư đến",
+    "verifyDescription": "Chúng tôi vừa gửi một email xác minh đến {email}. Vui lòng kiểm tra hộp thư của bạn",
     "resend": "Gửi lại liên kết xác minh",
-    "notReceive": "Không nhận được email?",
+    "notReceive": "Chưa nhận được email?",
     "wellDone": "Hoàn thành!!",
     "successVerify": "Bạn đã xác minh email thành công.",
-    "goToDocs": "Đi đến Tài liệu của tôi"
+    "goToDocs": "Đi tới Tài liệu của tôi"
   },
   "documents": {
     "myDocuments": "Tài liệu của tôi",
     "total": "Tổng cộng",
-    "fileName": "Tên tập tin",
-    "owner": "Chủ sở hữu tài liệu",
+    "fileName": "Tên tệp",
+    "owner": "Chủ sở hữu",
     "lastUpdated": "Cập nhật lần cuối",
     "noDocuments": "Không tìm thấy tài liệu nào",
     "loading": "Đang tải thêm tài liệu...",
     "you": "Bạn",
     "uploadDocument": "Tải lên tài liệu",
-    "uploadWithFile": "Tải lên từ tập tin",
+    "uploadWithFile": "Tải lên từ tệp",
     "uploadWithGoogleDrive": "Tải lên từ Google Drive",
     "uploading": "Đang tải lên..."
   },
@@ -56,7 +57,7 @@
     "sloganTail": "nhanh chóng, thú vị và dễ dàng"
   },
   "notFoundDoc": {
-    "tittle": "Bạn không có quyền truy cập tập tin này",
+    "tittle": "Bạn không có quyền truy cập tệp này",
     "title404": "Tài liệu này không tồn tại",
     "desc": "Bạn đang đăng nhập với tư cách",
     "backToHome": "Quay lại tài liệu của tôi"
@@ -74,31 +75,41 @@
     "logout": "Đăng xuất"
   },
   "toast": {
-    "uploadError": "Không thể tải tập tin này lên",
-    "uploadErrorSizeDesc": "Vui lòng đảm bảo tập tin không vượt quá 20MB và có định dạng .pdf",
-    "uploadErrorPasswordDesc": "Vui lòng đảm bảo tập tin không yêu cầu mật khẩu",
+    "uploadError": "Không thể tải tệp này lên",
+    "uploadErrorSizeDesc": "Vui lòng đảm bảo tệp tải lên không quá 20MB và ở định dạng .pdf",
+    "uploadErrorPasswordDesc": "Vui lòng đảm bảo tệp tải lên không yêu cầu mật khẩu",
     "uploadSuccess": "Tải lên thành công",
     "uploadErrorServer": "Tải lên thất bại. Vui lòng thử lại sau"
   },
   "shareDialog": {
     "editRole": "Có thể chỉnh sửa",
-    "viewRole": "Chỉ xem",
-    "removeRole": "Gỡ bỏ",
+    "viewRole": "Có thể xem",
+    "removeRole": "Xóa",
     "unregistedUser": "Người dùng chưa đăng ký",
-    "ownerRole": "Chủ tài liệu",
+    "ownerRole": "Chủ sở hữu tài liệu",
     "cancel": "Hủy",
     "save": "Lưu",
     "add": "Thêm",
-    "invitedTitle": "Người được mời",
+    "invitedTitle": "Người đã mời",
     "shareDoc": "Chia sẻ \"{name}\""
   },
   "annotControl": {
     "shapeHeader": "Hình dạng",
     "frameStyle": "Kiểu khung",
     "opacity": "Độ mờ",
-    "textHeader": "Kiểu văn bản",
+    "textHeader": "Kiểu chữ",
     "delete": "Xóa",
     "fill": "Tô màu",
-    "borderLine": "Đường viền"
+    "borderLine": "Viền"
+  },
+  "authDialog": {
+    "title": "Yêu cầu xác thực Google Drive",
+    "preDescription": "đã được tải lên bằng tài khoản Google Drive:",
+    "description": "Vui lòng xác thực tài khoản đó để truy cập tệp này.",
+    "detail": "Bạn đang đăng nhập với tư cách ",
+    "signInButton": "Đăng nhập",
+    "cancelButton": "Hủy",
+    "authButton": "Xác thực Google Drive",
+    "re-authButton": "Xác thực lại Google Drive"
   }
 }

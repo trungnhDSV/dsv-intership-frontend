@@ -115,7 +115,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
         try {
-          console.log('Google sign-in callback:', account.access_token);
           const res = await fetch(`${API_URL}/auth/oauth-check`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

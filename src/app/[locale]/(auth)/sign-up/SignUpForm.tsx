@@ -43,7 +43,6 @@ const SignUpForm = () => {
     }
   }, [state]);
 
-  console.log('state', state);
   return (
     <div className='w-1/3 px-12 h-screen bg-white p-12 flex flex-col justify-center items-center gap-10'>
       <div className='flex justify-center gap-2'>

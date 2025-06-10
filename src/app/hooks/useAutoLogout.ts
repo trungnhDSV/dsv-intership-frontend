@@ -34,6 +34,5 @@ export function useAutoLogout() {
       localStorage.removeItem('googleDriveProfile');
       signOut();
     }
-    console.log(session?.accessToken);
   }, [session?.accessToken]);
 }

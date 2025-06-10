@@ -32,7 +32,14 @@ const Documents = React.memo(
     handleSorting,
   }: {
     data: FileMetadata[];
-    currUser: string;
+    currUser:
+      | {
+          id: string;
+          email: string;
+          name: string;
+        }
+      | null
+      | undefined;
     t: (x: string) => void;
     setAuthDialogData: (data: {
       fileName: string;
@@ -45,7 +52,8 @@ const Documents = React.memo(
     const processedData = useMemo(() => {
       return data.map((doc) => ({
         ...doc,
-        ownerName: doc.ownerName === currUser ? `${doc.ownerName} (${t('you')})` : doc.ownerName,
+        ownerName:
+          doc.ownerName === currUser?.name ? `${doc.ownerName} (${t('you')})` : doc.ownerName,
       }));
     }, [data, currUser]);
 
@@ -56,6 +64,7 @@ const Documents = React.memo(
           data={processedData}
           setAuthDialogData={setAuthDialogData}
           setAuthDialogOpen={setAuthDialogOpen}
+          currUser={currUser}
         />
       </div>
     );
@@ -146,15 +155,6 @@ const useDocuments = (
               ...newDocs.filter((doc) => !prevDocuments.some((d) => d.id === doc.id)),
             ];
 
-        console.log(
-          'Fetched documents:',
-          newDocs.length,
-          'Total:',
-          mergedDocs.length,
-          'totalDocs:',
-          totalDocs.current
-        );
-
         setState((prev) => ({
           ...prev,
           documents: mergedDocs,
@@ -175,9 +175,7 @@ const useDocuments = (
   );
 
   const loadMore = useCallback(() => {
-    console.log('Checking if more documents can be loaded...', state.hasMore, state.isLoading);
     if (state.hasMore && !state.isLoading) {
-      console.log('Loading more documents...');
       fetchDocuments();
     }
   }, [fetchDocuments, state.hasMore, state.isLoading]);
@@ -223,6 +221,7 @@ const DocsPage = () => {
   const { documents, isLoading, error, hasMore, loadMore, updateDocuments, totalDocs } =
     useDocuments(userId, accessToken, sortOrd);
   const t = useTranslations('documents');
+  const tAuthDialog = useTranslations('authDialog');
 
   const handleNewDocument = useCallback(
     (newDoc: FileMetadata) => {
@@ -267,7 +266,6 @@ const DocsPage = () => {
   } | null>(null);
 
   if (status === 'loading' && !session) {
-    console.log('Session is loading...');
     return <Spinner className='flex justify-center items-center h-screen' />;
   }
 
@@ -280,25 +278,26 @@ const DocsPage = () => {
       <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
         <DialogContent className='z-1000000'>
           <DialogHeader>
-            <DialogTitle>Google Drive Authorization Required</DialogTitle>
-            <DialogDescription className='text-center pt-4'>
+            <DialogTitle>{tAuthDialog('title')}</DialogTitle>
+            <DialogDescription className='text-start pt-4'>
               {authDialogData?.currAccountEmail && (
                 <>
-                  <strong>You're sign in as {authDialogData?.currAccountEmail} </strong> <br />
+                  <strong>{tAuthDialog('detail') + authDialogData?.currAccountEmail} </strong>{' '}
+                  <br />
                 </>
               )}
               <strong>{authDialogData?.fileName} </strong>
-              was uploaded using Google Drive account:
+              {tAuthDialog('preDescription')}
               <br />
               <strong>{authDialogData?.uploaderEmail}</strong>.
               <br />
-              Please authorize that account to access this file.
+              {tAuthDialog('description')}
             </DialogDescription>
           </DialogHeader>
 
           <div className='mt-4 flex justify-end gap-2'>
             <Button variant='outline' onClick={() => setAuthDialogOpen(false)}>
-              Cancel
+              {tAuthDialog('cancelButton')}
             </Button>
             <Button
               onClick={() => {
@@ -307,8 +306,8 @@ const DocsPage = () => {
               }}
             >
               {authDialogData?.currAccountEmail
-                ? 'Re-authorize Google Drive'
-                : 'Authorize Google Drive'}
+                ? tAuthDialog('re-authButton')
+                : tAuthDialog('authButton')}
             </Button>
           </div>
         </DialogContent>
@@ -339,7 +338,7 @@ const DocsPage = () => {
             <Documents
               handleSorting={handleSorting}
               data={documents}
-              currUser={session?.user?.name || ''}
+              currUser={session?.user}
               t={t}
               setAuthDialogData={setAuthDialogData}
               setAuthDialogOpen={setAuthDialogOpen}
@@ -363,7 +362,7 @@ const DocsPage = () => {
           </div>
         )}
 
-        {error && <div className='p-4 text-center text-red-500'>Error: {error}</div>}
+        {/* {error && <div className='p-4 text-center text-red-500'>Error: {error}</div>} */}
       </div>
     </div>
   );

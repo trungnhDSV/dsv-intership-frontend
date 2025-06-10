@@ -82,7 +82,6 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
     }
 
     if (onAuthorizeSuccess) {
-      console.log('onAuthorizeSuccess, Google Drive profile ID:', data.profile.id);
       onAuthorizeSuccess(data.profile.id);
     }
   });
@@ -90,7 +89,6 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
   // handle upload with Google Drive
   const handleGoogleDriveUpload = async () => {
     let googleToken = localStorage.getItem('googleDriveToken');
-    console.log('Google token from localStorage:', googleToken);
     if (!googleToken || !(await isGoogleTokenValid(googleToken))) {
       handleConnectGoogleDrive();
       return;
@@ -125,10 +123,8 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
               headers: { Authorization: `Bearer ${googleToken}` },
             }
           );
-          console.log('Google Drive file response:', response);
           const blob = await response.blob();
           const blobUrl = URL.createObjectURL(blob);
-          console.log('Blob URL:', blobUrl);
           // 4. Tạo file từ blob
           const file = new File([blob], picked.name, { type: blob.type });
           // 5. Gọi lại handleUpload
@@ -148,7 +144,6 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
     googleDriveProfile?: { email: string; id: string }
   ) => {
     setSelectedFile(file);
-    console.log('Selected file:', file);
 
     if (!file || !session?.user?.id) {
       console.error('No file selected or user ID not found');
@@ -187,7 +182,6 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
         userId: session.user.id,
       }),
     });
-    console.log('Request upload URL response:', res);
     const data: {
       data: {
         url: string;
@@ -244,8 +238,6 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
           };
         }
 
-        console.log('Metadata payload:', metaPayload);
-
         const metaRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/documents`, {
           method: 'POST',
           headers: {
@@ -286,10 +278,8 @@ export function UploadDialog({ session, onUploadSuccess, onAuthorizeSuccess }: U
         accept='application/pdf'
         className='hidden'
         onChange={(e) => {
-          console.log('File input changed:', e.target.files);
           const file = e.target.files?.[0];
           if (file) {
-            console.log('START HANDLE UPLOAD');
             handleUpload(file);
           }
           e.target.value = '';
